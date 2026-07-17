@@ -52,7 +52,8 @@ router.get('/status', (req, res) => {
     lastBackupTime: state.lastBackupTime,
     fileCount: Object.keys(state.files || {}).length,
     folderCount: Object.keys(state.folders || {}).length,
-    files: state.files || {}
+    files: state.files || {},
+    folders: state.folders || {}
   });
 });
 

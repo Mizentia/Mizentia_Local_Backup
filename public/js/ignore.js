@@ -48,7 +48,7 @@ BackupApp.ignore.matches = function(path) {
     if (cleanRule.startsWith('**/')) {
       const pattern = cleanRule.slice(3);
       if (isFolderRule) {
-        return path === pattern || path.startsWith(pattern + '/') || path.includes('/' + pattern + '/');
+        return path === pattern || path.startsWith(pattern + '/') || path.endsWith('/' + pattern) || path.includes('/' + pattern + '/');
       } else {
         return path === pattern || path.endsWith('/' + pattern);
       }

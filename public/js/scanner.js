@@ -498,13 +498,13 @@ BackupApp.scanner.init = function() {
       
       BackupApp.state.scanResults.changes.added.forEach(f => {
         if (BackupApp.state.selectedItems.has(f.relativePath)) {
-          itemsToBackup.push({ type: 'add', path: f.relativePath, size: f.size || 0, nodeType: f.type || 'file' });
+          itemsToBackup.push({ type: 'add', path: f.relativePath, size: f.size || 0, nodeType: f.type || 'file', mtime: f.mtime });
           totalBytes += f.size || 0;
         }
       });
       BackupApp.state.scanResults.changes.modified.forEach(f => {
         if (BackupApp.state.selectedItems.has(f.relativePath)) {
-          itemsToBackup.push({ type: 'modify', path: f.relativePath, size: f.size || 0, nodeType: f.type || 'file' });
+          itemsToBackup.push({ type: 'modify', path: f.relativePath, size: f.size || 0, nodeType: f.type || 'file', mtime: f.mtime });
           totalBytes += f.size || 0;
         }
       });
@@ -520,7 +520,8 @@ BackupApp.scanner.init = function() {
             oldPath: f.oldPath, 
             newPath: f.newPath,
             driveFileId: f.driveFileId,
-            size: 0
+            size: f.size || 0,
+            mtime: f.mtime
           });
         }
       });
@@ -579,14 +580,14 @@ BackupApp.scanner.init = function() {
               }
               try {
                 const itemPath = item.path || item.newPath || item.relativePath;
-                if (item.type === 'folder' || item.nodeType === 'folder' || item.changeType === 'add' || item.changeType === 'modify') {
+                if ((item.type === 'folder' || item.nodeType === 'folder' || item.changeType === 'add' || item.changeType === 'modify') && item.type !== 'delete') {
                   const parts = itemPath.split('/');
                   let dir = BackupApp.state.destDirHandle;
                   for (const sub of parts) {
                     dir = await dir.getDirectoryHandle(sub, { create: true });
                   }
                   backupSuccess = true;
-                } else if (item.changeType === 'delete' && item.type === 'folder') {
+                } else if (item.type === 'delete' && (item.nodeType === 'folder' || item.type === 'folder')) {
                   backupSuccess = true;
                 } else {
                   const srcFileHandle = await getFileHandleByPath(BackupApp.state.sourceDirHandle, itemPath);

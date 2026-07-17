@@ -422,8 +422,27 @@ BackupApp.restore.init = function() {
           return await dir.getFileHandle(fileName);
         }
 
+        const backupState = JSON.parse(localStorage.getItem('mizentia_backup_state') || '{"files":{},"folders":{}}');
+        const stateFiles = backupState.files || {};
+        const filesToRestore = [];
+
+        for (const p of selections) {
+          if (stateFiles[p]) {
+            filesToRestore.push(p);
+          } else {
+            const prefix = p.endsWith('/') ? p : p + '/';
+            for (const relPath in stateFiles) {
+              if (relPath.startsWith(prefix)) {
+                if (!filesToRestore.includes(relPath)) {
+                  filesToRestore.push(relPath);
+                }
+              }
+            }
+          }
+        }
+
         let successCount = 0;
-        for (const path of selections) {
+        for (const path of filesToRestore) {
           try {
             if (config.connectionType === 'local_drive') {
               if (!BackupApp.state.destDirHandle) {
@@ -442,9 +461,31 @@ BackupApp.restore.init = function() {
               const writable = await destFileHandle.createWritable();
               await writable.write(file);
               await writable.close();
+
+              const updatedFile = await destFileHandle.getFile();
+              const currentBackupState = JSON.parse(localStorage.getItem('mizentia_backup_state') || '{"files":{},"folders":{}}');
+              if (!currentBackupState.files) currentBackupState.files = {};
+              if (currentBackupState.files[path]) {
+                currentBackupState.files[path].size = updatedFile.size;
+                currentBackupState.files[path].mtime = updatedFile.lastModified;
+              } else {
+                currentBackupState.files[path] = {
+                  size: updatedFile.size,
+                  mtime: updatedFile.lastModified
+                };
+              }
+              localStorage.setItem('mizentia_backup_state', JSON.stringify(currentBackupState));
               successCount++;
             } else {
               await new Promise(r => setTimeout(r, 200));
+              const currentBackupState = JSON.parse(localStorage.getItem('mizentia_backup_state') || '{"files":{},"folders":{}}');
+              if (!currentBackupState.files) currentBackupState.files = {};
+              if (currentBackupState.files[path]) {
+                currentBackupState.files[path].mtime = Date.now();
+              } else {
+                currentBackupState.files[path] = { size: 0, mtime: Date.now() };
+              }
+              localStorage.setItem('mizentia_backup_state', JSON.stringify(currentBackupState));
               successCount++;
             }
           } catch (e) {
