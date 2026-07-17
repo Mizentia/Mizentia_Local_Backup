@@ -200,3 +200,44 @@ BackupApp.utils.stopHeartbeatMonitor = function() {
     dot.style.transform = 'scale(1)';
   }
 };
+
+BackupApp.utils.openDB = function() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('MizentiaBackupDB', 1);
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('handles')) {
+        db.createObjectStore('handles');
+      }
+    };
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+};
+
+BackupApp.utils.saveHandle = async function(key, handle) {
+  try {
+    const db = await BackupApp.utils.openDB();
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(handle, key);
+    return new Promise((resolve) => {
+      tx.oncomplete = () => resolve(true);
+    });
+  } catch (e) {
+    console.error('IndexedDB save failed:', e);
+  }
+};
+
+BackupApp.utils.loadHandle = async function(key) {
+  try {
+    const db = await BackupApp.utils.openDB();
+    const tx = db.transaction('handles', 'readonly');
+    const request = tx.objectStore('handles').get(key);
+    return new Promise((resolve) => {
+      request.onsuccess = (e) => resolve(e.target.result);
+    });
+  } catch (e) {
+    console.error('IndexedDB load failed:', e);
+    return null;
+  }
+};

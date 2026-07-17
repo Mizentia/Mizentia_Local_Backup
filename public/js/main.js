@@ -30,6 +30,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (isServerless) {
     BackupApp.state.isServerless = true;
     BackupApp.utils.logToConsole('Local backend server offline. Running in Serverless Browser Mode.', 'warning');
+    
+    // Load saved handles from IndexedDB
+    try {
+      const savedSourceHandle = await BackupApp.utils.loadHandle('sourceDirHandle');
+      if (savedSourceHandle) {
+        BackupApp.state.sourceDirHandle = savedSourceHandle;
+        if (BackupApp.elements.browserModeBannerText) {
+          BackupApp.elements.browserModeBannerText.innerHTML = `সক্রিয় ফোল্ডার: <strong style="color:var(--text-cyan);">${savedSourceHandle.name}</strong>`;
+        }
+        if (BackupApp.elements.btnBrowserSelectFolder) {
+          BackupApp.elements.btnBrowserSelectFolder.textContent = 'চেঞ্জ করুন';
+        }
+      }
+      const savedDestHandle = await BackupApp.utils.loadHandle('destDirHandle');
+      if (savedDestHandle) {
+        BackupApp.state.destDirHandle = savedDestHandle;
+      }
+    } catch (e) {
+      console.error('Error loading saved directory handles:', e);
+    }
+
     if (BackupApp.elements.browserModeBanner) {
       BackupApp.elements.browserModeBanner.style.display = 'flex';
     }
@@ -38,6 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
           const handle = await window.showDirectoryPicker();
           BackupApp.state.sourceDirHandle = handle;
+          await BackupApp.utils.saveHandle('sourceDirHandle', handle);
           if (BackupApp.elements.browserModeBannerText) {
             BackupApp.elements.browserModeBannerText.innerHTML = `সক্রিয় ফোল্ডার: <strong style="color:var(--text-cyan);">${handle.name}</strong>`;
           }
@@ -56,9 +78,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   BackupApp.dashboard.fetchStatus().then(() => {
     BackupApp.utils.logToConsole('Local Backup system state initialized.', 'success');
     
-    // Start background scan silently with the mini widget when visiting page (only if source folder is set or server is active)
-    if (!BackupApp.state.isServerless || BackupApp.state.sourceDirHandle) {
-      if (typeof BackupApp.scanner.scan === 'function') {
+    // Start background scan silently or full auto-scan on browser boot
+    if (typeof BackupApp.scanner.scan === 'function') {
+      if (BackupApp.state.isServerless) {
+        if (BackupApp.state.sourceDirHandle) {
+          BackupApp.scanner.scan(false, false);
+        }
+      } else {
         BackupApp.scanner.scan(false, true);
       }
     }

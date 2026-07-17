@@ -20,6 +20,24 @@ BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false) {
       return;
     }
 
+    // Verify directory permissions
+    try {
+      let permission = await BackupApp.state.sourceDirHandle.queryPermission({ mode: 'readwrite' });
+      if (permission !== 'granted') {
+        BackupApp.utils.logToConsole('Requesting permission to access workspace folder...', 'info');
+        permission = await BackupApp.state.sourceDirHandle.requestPermission({ mode: 'readwrite' });
+        if (permission !== 'granted') {
+          BackupApp.utils.showToast('লোকাল ফোল্ডার ব্যবহারের অনুমতি দেওয়া হয়নি!', 'error');
+          if (logoIcon) logoIcon.classList.remove('sync-icon-anim');
+          return;
+        }
+      }
+    } catch (e) {
+      BackupApp.utils.logToConsole(`Error verifying folder permissions: ${e.message}`, 'error');
+      if (logoIcon) logoIcon.classList.remove('sync-icon-anim');
+      return;
+    }
+
     isScanMinimized = useMiniWidget;
     const handleProgressUpdate = (percent, text) => {
       lastScanProgress = { percent, text };
@@ -485,6 +503,13 @@ BackupApp.scanner.init = function() {
             if (config.connectionType === 'local_drive') {
               if (!BackupApp.state.destDirHandle) {
                 throw new Error('গন্তব্য ফোল্ডার সিলেক্ট করা নেই! সেটিংস এ যান এবং সংযোগ পরীক্ষা করুন।');
+              }
+              let destPermission = await BackupApp.state.destDirHandle.queryPermission({ mode: 'readwrite' });
+              if (destPermission !== 'granted') {
+                destPermission = await BackupApp.state.destDirHandle.requestPermission({ mode: 'readwrite' });
+                if (destPermission !== 'granted') {
+                  throw new Error('গন্তব্য ফোল্ডার ব্যবহারের অনুমতি দেওয়া হয়নি!');
+                }
               }
               try {
                 const srcFileHandle = await getFileHandleByPath(BackupApp.state.sourceDirHandle, item.path || item.newPath);

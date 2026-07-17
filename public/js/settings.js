@@ -274,6 +274,7 @@ BackupApp.settings.init = function() {
       try {
         const handle = await window.showDirectoryPicker();
         BackupApp.state.sourceDirHandle = handle;
+        await BackupApp.utils.saveHandle('sourceDirHandle', handle);
         if (BackupApp.elements.localWorkspaceRoot) {
           BackupApp.elements.localWorkspaceRoot.value = handle.name;
         }
@@ -296,6 +297,7 @@ BackupApp.settings.init = function() {
       try {
         const handle = await window.showDirectoryPicker();
         BackupApp.state.destDirHandle = handle;
+        await BackupApp.utils.saveHandle('destDirHandle', handle);
         if (BackupApp.elements.localDrivePath) {
           BackupApp.elements.localDrivePath.value = handle.name;
         }
@@ -304,5 +306,10 @@ BackupApp.settings.init = function() {
         BackupApp.utils.logToConsole(`Error selecting backup destination: ${err.message}`, 'error');
       }
     });
+  }
+
+  // Apply current system status to UI on load
+  if (BackupApp.state.systemStatus) {
+    BackupApp.settings.updateUI(BackupApp.state.systemStatus);
   }
 };
