@@ -141,6 +141,24 @@ BackupApp.restore.renderDualTree = function(container, items, isLocalTree) {
     chkContainer.appendChild(chkMark);
     rowEl.appendChild(chkContainer);
 
+    if (node.type === 'folder' && node.children && Object.keys(node.children).length > 0) {
+      const toggleEl = document.createElement('span');
+      toggleEl.className = 'node-toggle-arrow';
+      toggleEl.innerHTML = '▶';
+      toggleEl.style.fontSize = '0.7rem';
+      toggleEl.style.marginRight = '6px';
+      toggleEl.style.color = '#818cf8';
+      toggleEl.style.cursor = 'pointer';
+      toggleEl.style.display = 'inline-block';
+      toggleEl.style.width = '10px';
+      rowEl.appendChild(toggleEl);
+    } else {
+      const spacer = document.createElement('span');
+      spacer.style.display = 'inline-block';
+      spacer.style.width = '16px';
+      rowEl.appendChild(spacer);
+    }
+
     const iconEl = document.createElement('span');
     iconEl.className = 'node-icon';
     iconEl.style.marginRight = '6px';
@@ -190,6 +208,10 @@ BackupApp.restore.renderDualTree = function(container, items, isLocalTree) {
         const isCollapsed = childrenContainer.style.display === 'none';
         childrenContainer.style.display = isCollapsed ? 'block' : 'none';
         rowEl.style.background = isCollapsed ? 'rgba(255,255,255,0.04)' : 'transparent';
+        const arrow = rowEl.querySelector('.node-toggle-arrow');
+        if (arrow) {
+          arrow.innerHTML = isCollapsed ? '▼' : '▶';
+        }
       });
     }
 

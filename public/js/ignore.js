@@ -39,11 +39,26 @@ BackupApp.ignore.matches = function(path) {
   const rules = BackupApp.ignore.parseRules(content);
   return rules.some(rule => {
     let cleanRule = rule;
-    if (rule.endsWith('/')) {
+    const isFolderRule = rule.endsWith('/');
+    if (isFolderRule) {
       cleanRule = rule.slice(0, -1);
+    }
+    
+    // Support global double-star patterns (e.g. **/name)
+    if (cleanRule.startsWith('**/')) {
+      const pattern = cleanRule.slice(3);
+      if (isFolderRule) {
+        return path === pattern || path.startsWith(pattern + '/') || path.includes('/' + pattern + '/');
+      } else {
+        return path === pattern || path.endsWith('/' + pattern);
+      }
+    }
+
+    // Standard specific rules
+    if (isFolderRule) {
       return path === cleanRule || path.startsWith(cleanRule + '/');
     }
-    return path === rule || path.startsWith(rule + '/');
+    return path === cleanRule || path.startsWith(cleanRule + '/');
   });
 };
 
