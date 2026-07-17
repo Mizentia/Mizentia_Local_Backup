@@ -205,6 +205,7 @@ BackupApp.restore.renderWorkspace = function() {
   BackupApp.restore.renderArchive();
 };
 
+BackupApp.restore.renderArchive = async function() {
   if (BackupApp.state.isServerless) {
     if (!BackupApp.state.sourceDirHandle) {
       if (BackupApp.elements.restoreLocalTreeBody) {
