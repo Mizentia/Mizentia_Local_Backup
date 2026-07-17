@@ -267,4 +267,42 @@ BackupApp.settings.init = function() {
       }
     });
   }
+
+  const btnSelectSettingsWorkspace = document.getElementById('btnSelectSettingsWorkspace');
+  if (btnSelectSettingsWorkspace) {
+    btnSelectSettingsWorkspace.addEventListener('click', async () => {
+      try {
+        const handle = await window.showDirectoryPicker();
+        BackupApp.state.sourceDirHandle = handle;
+        if (BackupApp.elements.localWorkspaceRoot) {
+          BackupApp.elements.localWorkspaceRoot.value = handle.name;
+        }
+        if (BackupApp.elements.browserModeBannerText) {
+          BackupApp.elements.browserModeBannerText.innerHTML = `সক্রিয় ফোল্ডার: <strong style="color:var(--text-cyan);">${handle.name}</strong>`;
+        }
+        if (BackupApp.elements.btnBrowserSelectFolder) {
+          BackupApp.elements.btnBrowserSelectFolder.textContent = 'চেঞ্জ করুন';
+        }
+        BackupApp.utils.showToast(`ফোল্ডার সিলেক্ট করা হয়েছে: ${handle.name}`, 'success');
+      } catch (err) {
+        BackupApp.utils.logToConsole(`Error selecting workspace: ${err.message}`, 'error');
+      }
+    });
+  }
+
+  const btnSelectSettingsLocalDrive = document.getElementById('btnSelectSettingsLocalDrive');
+  if (btnSelectSettingsLocalDrive) {
+    btnSelectSettingsLocalDrive.addEventListener('click', async () => {
+      try {
+        const handle = await window.showDirectoryPicker();
+        BackupApp.state.destDirHandle = handle;
+        if (BackupApp.elements.localDrivePath) {
+          BackupApp.elements.localDrivePath.value = handle.name;
+        }
+        BackupApp.utils.showToast(`ব্যাকআপ গন্তব্য ফোল্ডার সিলেক্ট করা হয়েছে: ${handle.name}`, 'success');
+      } catch (err) {
+        BackupApp.utils.logToConsole(`Error selecting backup destination: ${err.message}`, 'error');
+      }
+    });
+  }
 };

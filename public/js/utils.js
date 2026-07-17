@@ -48,7 +48,8 @@ BackupApp.utils.cacheElements = function() {
     'selectedIgnorePathText', 'specificPathExampleText', 'globalPatternExampleText',
     'btnCancelIgnoreModal', 'btnConfirmAddIgnore', 'ignoreWorkspaceBrowser', 'activeRulesList',
     'btnCancelIgnoreChanges', 'sidebarGitInfo', 'sidebarGitRepoText',
-    'browserModeBanner', 'btnBrowserSelectFolder', 'browserModeBannerText'
+    'browserModeBanner', 'btnBrowserSelectFolder', 'browserModeBannerText',
+    'btnSelectSettingsWorkspace', 'btnSelectSettingsLocalDrive'
   ];
   
   ids.forEach(id => {

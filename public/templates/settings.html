@@ -15,8 +15,9 @@
     <h3>📂 প্রজেক্ট পাথ কনফিগারেশন</h3>
     <div class="form-group" style="margin-bottom: 0;">
       <label for="localWorkspaceRoot">লোকাল প্রজেক্ট ডিরেক্টরি (Workspace Root Path)</label>
-      <div style="display: flex; gap: 10px;">
-        <input type="text" id="localWorkspaceRoot" class="form-control code-font" placeholder="যেমন: C:\Users\USER\Desktop\Mizentia All Project">
+      <div style="display: flex; gap: 10px; width: 100%;">
+        <input type="text" id="localWorkspaceRoot" class="form-control code-font" placeholder="যেমন: C:\Users\USER\Desktop\Mizentia All Project" style="flex-grow: 1;">
+        <button class="btn btn-secondary" id="btnSelectSettingsWorkspace" style="white-space: nowrap;">📁 ফোল্ডার সিলেক্ট করুন</button>
         <button class="btn btn-secondary" id="btnSetDefaultWorkspace" style="white-space: nowrap;">ডিফল্ট পাথ সেট করুন</button>
       </div>
       <span class="form-text">এই সিস্টেমটি এই ফোল্ডারের মধ্যকার ফাইল ও ফোল্ডারসমূহের ব্যাকআপ সিঙ্ক তদারকি করবে।</span>
@@ -79,7 +80,10 @@
       <div id="localDriveFields" style="display: none;">
         <div class="form-group">
           <label for="localDrivePath">লোকাল ড্রাইভ রুট পাথ (Google Drive Mount Path on PC)</label>
-          <input type="text" id="localDrivePath" class="form-control code-font" placeholder="যেমন: G:\My Drive  অথবা  D:\GoogleDriveBackup">
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="localDrivePath" class="form-control code-font" placeholder="যেমন: G:\My Drive  অথবা  D:\GoogleDriveBackup" style="flex-grow: 1;">
+            <button class="btn btn-secondary" id="btnSelectSettingsLocalDrive" style="white-space: nowrap;">📁 ফোল্ডার সিলেক্ট করুন</button>
+          </div>
           <span class="form-text">গুগল ড্রাইভ ডেস্কটপ অ্যাপ্লিকেশনের লোকাল ড্রাইভ পাথটি এখানে প্রদান করুন। ব্যাকআপ এই ডিরেক্টরিতে প্রজেক্ট ফোল্ডার নামে সিঙ্ক হবে।</span>
         </div>
       </div>
