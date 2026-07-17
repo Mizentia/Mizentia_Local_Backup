@@ -1,6 +1,16 @@
 let activeIgnoreItem = null;
 
 BackupApp.ignore.loadRules = async function() {
+  if (BackupApp.state.isServerless) {
+    const rules = localStorage.getItem('mizentia_backup_ignore_rules') || '# .backupignore\nnode_modules/\n.git/\n.gemini/\ntmp/\n';
+    if (BackupApp.elements.ignoreRulesTextarea) {
+      BackupApp.elements.ignoreRulesTextarea.value = rules;
+    }
+    BackupApp.utils.logToConsole('Loaded ignore rules from local storage.', 'info');
+    BackupApp.ignore.renderActiveList();
+    return;
+  }
+
   try {
     const response = await fetch('/api/ignore');
     const data = await response.json();
@@ -20,6 +30,21 @@ BackupApp.ignore.parseRules = function(content) {
     .split('\n')
     .map(line => line.trim())
     .filter(line => line.length > 0 && !line.startsWith('#'));
+};
+
+BackupApp.ignore.matches = function(path) {
+  const textarea = BackupApp.elements.ignoreRulesTextarea;
+  if (!textarea) return false;
+  const content = textarea.value;
+  const rules = BackupApp.ignore.parseRules(content);
+  return rules.some(rule => {
+    let cleanRule = rule;
+    if (rule.endsWith('/')) {
+      cleanRule = rule.slice(0, -1);
+      return path === cleanRule || path.startsWith(cleanRule + '/');
+    }
+    return path === rule || path.startsWith(rule + '/');
+  });
 };
 
 BackupApp.ignore.renderActiveList = function() {
@@ -167,6 +192,20 @@ BackupApp.ignore.saveRules = async function(notify = true) {
   const content = BackupApp.elements.ignoreRulesTextarea.value;
   if (notify) BackupApp.utils.logToConsole('Saving updated ignore rules to .backupignore...', 'info');
   
+  if (BackupApp.state.isServerless) {
+    localStorage.setItem('mizentia_backup_ignore_rules', content);
+    if (notify) {
+      BackupApp.utils.logToConsole('Successfully saved ignore rules locally.', 'success');
+      BackupApp.utils.showToast('ইগনোর রুলস সেভ হয়েছে!', 'success');
+    }
+    BackupApp.ignore.renderActiveList();
+    BackupApp.ignore.loadWorkspaceBrowser();
+    if (typeof BackupApp.scanner.scan === 'function') {
+      BackupApp.scanner.scan(true);
+    }
+    return;
+  }
+
   try {
     const response = await fetch('/api/ignore', {
       method: 'POST',
@@ -198,6 +237,41 @@ BackupApp.ignore.loadWorkspaceBrowser = async function() {
   if (!browserContainer) return;
   browserContainer.innerHTML = '<div style="font-size: 0.85rem; opacity: 0.6; padding: 10px;">ওয়ার্কস্পেস ডিরেক্টরি লোড হচ্ছে...</div>';
   
+  if (BackupApp.state.isServerless) {
+    if (!BackupApp.state.sourceDirHandle) {
+      browserContainer.innerHTML = '<div style="font-size: 0.85rem; opacity: 0.6; padding: 10px;">ওয়ার্কস্পেস ডিরেক্টরি সিলেক্ট করা নেই। দয়া করে সেটিংস ট্যাবে যান।</div>';
+      return;
+    }
+    try {
+      browserContainer.innerHTML = '';
+      const listContainer = document.createElement('div');
+      listContainer.className = 'workspace-tree-container';
+      
+      const items = [];
+      for await (const entry of BackupApp.state.sourceDirHandle.values()) {
+        const isIgnored = BackupApp.ignore.matches(entry.name);
+        items.push({
+          name: entry.name,
+          relativePath: entry.name,
+          type: entry.kind,
+          isIgnored: isIgnored
+        });
+      }
+      items.sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      items.forEach(item => {
+        listContainer.appendChild(BackupApp.ignore.createWorkspaceNodeHtml(item));
+      });
+      browserContainer.appendChild(listContainer);
+    } catch (e) {
+      browserContainer.innerHTML = `<div style="font-size: 0.85rem; color: #f43f5e; padding: 10px;">লোড ব্যর্থ হয়েছে: ${e.message}</div>`;
+    }
+    return;
+  }
+
   try {
     const response = await fetch('/api/workspace/list?path=');
     const data = await response.json();
@@ -368,6 +442,47 @@ BackupApp.ignore.createWorkspaceNodeHtml = function(item) {
         
         if (!childrenLoaded) {
           childrenContainer.innerHTML = '<div style="font-size: 0.75rem; opacity: 0.5; padding: 4px 10px;">লোড হচ্ছে...</div>';
+          
+          if (BackupApp.state.isServerless) {
+            try {
+              const rootHandle = BackupApp.state.sourceDirHandle;
+              const parts = item.relativePath.split('/');
+              let folderHandle = rootHandle;
+              for (const part of parts) {
+                folderHandle = await folderHandle.getDirectoryHandle(part);
+              }
+              
+              const items = [];
+              for await (const entry of folderHandle.values()) {
+                const childPath = `${item.relativePath}/${entry.name}`;
+                const isIgnored = BackupApp.ignore.matches(childPath);
+                items.push({
+                  name: entry.name,
+                  relativePath: childPath,
+                  type: entry.kind,
+                  isIgnored: isIgnored
+                });
+              }
+              items.sort((a, b) => {
+                if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
+                return a.name.localeCompare(b.name);
+              });
+
+              childrenContainer.innerHTML = '';
+              if (items.length === 0) {
+                childrenContainer.innerHTML = '<div style="font-size: 0.75rem; opacity: 0.4; padding: 4px 10px; font-style: italic;">ফোল্ডারটি ফাঁকা</div>';
+              } else {
+                items.forEach(child => {
+                  childrenContainer.appendChild(BackupApp.ignore.createWorkspaceNodeHtml(child));
+                });
+              }
+              childrenLoaded = true;
+            } catch (err) {
+              childrenContainer.innerHTML = `<div style="font-size: 0.75rem; color: #f43f5e; padding: 4px 10px;">এরর: ${err.message}</div>`;
+            }
+            return;
+          }
+
           try {
             const response = await fetch(`/api/workspace/list?path=${encodeURIComponent(item.relativePath)}`);
             const data = await response.json();

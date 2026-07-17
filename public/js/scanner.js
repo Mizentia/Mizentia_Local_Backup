@@ -63,9 +63,15 @@ BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false, i
 
     try {
       const files = [];
+      const folderList = [];
       async function traverse(handle, relPath = '') {
         for await (const entry of handle.values()) {
           const entryPath = relPath ? `${relPath}/${entry.name}` : entry.name;
+          
+          if (typeof BackupApp.ignore?.matches === 'function') {
+            if (BackupApp.ignore.matches(entryPath)) continue;
+          }
+
           if (entry.kind === 'file') {
             const file = await entry.getFile();
             files.push({
@@ -73,9 +79,11 @@ BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false, i
               relativePath: entryPath,
               size: file.size,
               mtime: file.lastModified,
+              type: 'file',
               handle: entry
             });
           } else if (entry.kind === 'folder') {
+            folderList.push(entryPath);
             await traverse(entry, entryPath);
           }
         }
@@ -87,10 +95,12 @@ BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false, i
 
       const backupState = JSON.parse(localStorage.getItem('mizentia_backup_state') || '{"files":{},"folders":{}}');
       const backedFiles = backupState.files || {};
+      const backedFolders = backupState.folders || {};
 
       const changes = { added: [], modified: [], deleted: [], renamed: [] };
       const localFilesMap = new Map();
 
+      // Compare files
       files.forEach(f => {
         localFilesMap.set(f.relativePath, f);
         const backed = backedFiles[f.relativePath];
@@ -101,17 +111,68 @@ BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false, i
         }
       });
 
+      // Deleted files
       Object.keys(backedFiles).forEach(path => {
         if (!localFilesMap.has(path)) {
           changes.deleted.push({ relativePath: path, size: backedFiles[path].size, type: 'file' });
         }
       });
 
+      // Compare folders
+      const addedFolders = [];
+      const modifiedFolders = [];
+      const deletedFolders = [];
+      const localFoldersMap = new Set(folderList);
+
+      const fileChanges = [...changes.added, ...changes.modified, ...changes.deleted];
+
+      folderList.forEach(folder => {
+        if (!backedFolders[folder]) {
+          addedFolders.push({
+            relativePath: folder,
+            type: 'folder',
+            changeType: 'add'
+          });
+        } else {
+          const prefix = folder.endsWith('/') ? folder : folder + '/';
+          const hasPending = fileChanges.some(item => {
+            const itemPath = item.relativePath || item.path || item.newPath;
+            return itemPath && itemPath.startsWith(prefix);
+          });
+          if (hasPending) {
+            modifiedFolders.push({
+              relativePath: folder,
+              type: 'folder',
+              changeType: 'modify'
+            });
+          }
+        }
+      });
+
+      Object.keys(backedFolders).forEach(folder => {
+        if (!localFoldersMap.has(folder)) {
+          deletedFolders.push({
+            relativePath: folder,
+            type: 'folder',
+            changeType: 'delete'
+          });
+        }
+      });
+
+      // Merge folder changes
+      changes.added = [...changes.added, ...addedFolders];
+      changes.modified = [...changes.modified, ...modifiedFolders];
+      changes.deleted = [...changes.deleted, ...deletedFolders];
+
+      const unchangedFilesCount = files.length - (changes.added.filter(c => c.type === 'file').length + changes.modified.filter(c => c.type === 'file').length);
+      const unchangedFoldersCount = folderList.length - (addedFolders.length + modifiedFolders.length);
+
       const summary = {
         added: changes.added.length,
         modified: changes.modified.length,
         deleted: changes.deleted.length,
-        renamed: changes.renamed.length
+        renamed: changes.renamed.length,
+        unchanged: unchangedFilesCount
       };
 
       const extensionStats = {};
@@ -122,22 +183,22 @@ BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false, i
 
       const localSummary = {
         totalFiles: files.length,
-        totalFolders: 0,
+        totalFolders: folderList.length,
         statusGroups: {
-          backedUp: { folders: 0, files: files.length - changes.added.length - changes.modified.length },
-          edited: { folders: 0, files: changes.modified.length },
-          notBackedUp: { folders: 0, files: changes.added.length }
+          backedUp: { folders: unchangedFoldersCount, files: unchangedFilesCount },
+          edited: { folders: modifiedFolders.length, files: changes.modified.filter(c => c.type === 'file').length },
+          notBackedUp: { folders: addedFolders.length, files: changes.added.filter(c => c.type === 'file').length }
         },
         extensionStats
       };
 
       const driveSummary = {
         totalFiles: Object.keys(backedFiles).length,
-        totalFolders: 0,
+        totalFolders: Object.keys(backedFolders).length,
         statusGroups: {
-          existsLocally: { folders: 0, files: Object.keys(backedFiles).length - changes.deleted.length },
-          deletedLocally: { folders: 0, files: changes.deleted.length },
-          edited: { folders: 0, files: changes.modified.length }
+          existsLocally: { folders: Object.keys(backedFolders).length - deletedFolders.length, files: Object.keys(backedFiles).length - changes.deleted.filter(c => c.type === 'file').length },
+          deletedLocally: { folders: deletedFolders.length, files: changes.deleted.filter(c => c.type === 'file').length },
+          edited: { folders: modifiedFolders.length, files: changes.modified.filter(c => c.type === 'file').length }
         },
         extensionStats: {}
       };
@@ -517,20 +578,32 @@ BackupApp.scanner.init = function() {
                 }
               }
               try {
-                const srcFileHandle = await getFileHandleByPath(BackupApp.state.sourceDirHandle, item.path || item.newPath);
-                const file = await srcFileHandle.getFile();
+                const itemPath = item.path || item.newPath || item.relativePath;
+                if (item.type === 'folder' || item.nodeType === 'folder' || item.changeType === 'add' || item.changeType === 'modify') {
+                  const parts = itemPath.split('/');
+                  let dir = BackupApp.state.destDirHandle;
+                  for (const sub of parts) {
+                    dir = await dir.getDirectoryHandle(sub, { create: true });
+                  }
+                  backupSuccess = true;
+                } else if (item.changeType === 'delete' && item.type === 'folder') {
+                  backupSuccess = true;
+                } else {
+                  const srcFileHandle = await getFileHandleByPath(BackupApp.state.sourceDirHandle, itemPath);
+                  const file = await srcFileHandle.getFile();
 
-                const parts = (item.path || item.newPath).split('/');
-                const fileName = parts.pop();
-                let dir = BackupApp.state.destDirHandle;
-                for (const sub of parts) {
-                  dir = await dir.getDirectoryHandle(sub, { create: true });
+                  const parts = itemPath.split('/');
+                  const fileName = parts.pop();
+                  let dir = BackupApp.state.destDirHandle;
+                  for (const sub of parts) {
+                    dir = await dir.getDirectoryHandle(sub, { create: true });
+                  }
+                  const destFileHandle = await dir.getFileHandle(fileName, { create: true });
+                  const writable = await destFileHandle.createWritable();
+                  await writable.write(file);
+                  await writable.close();
+                  backupSuccess = true;
                 }
-                const destFileHandle = await dir.getFileHandle(fileName, { create: true });
-                const writable = await destFileHandle.createWritable();
-                await writable.write(file);
-                await writable.close();
-                backupSuccess = true;
               } catch (e) {
                 errMsg = e.message;
               }
@@ -542,11 +615,23 @@ BackupApp.scanner.init = function() {
             if (backupSuccess) {
               const backupState = JSON.parse(localStorage.getItem('mizentia_backup_state') || '{"files":{},"folders":{}}');
               if (!backupState.files) backupState.files = {};
+              if (!backupState.folders) backupState.folders = {};
               
-              if (item.type === 'delete') {
-                delete backupState.files[item.path];
+              const itemPath = item.path || item.newPath || item.relativePath;
+              const isFolder = item.type === 'folder' || item.nodeType === 'folder' || (item.changeType && item.type === 'folder');
+
+              if (isFolder) {
+                if (item.changeType === 'delete' || item.type === 'delete') {
+                  delete backupState.folders[itemPath];
+                } else {
+                  backupState.folders[itemPath] = Date.now();
+                }
               } else {
-                backupState.files[item.path || item.newPath] = { size: item.size, mtime: Date.now() };
+                if (item.type === 'delete') {
+                  delete backupState.files[itemPath];
+                } else {
+                  backupState.files[itemPath] = { size: item.size, mtime: item.mtime || Date.now() };
+                }
               }
               backupState.lastBackupTime = Date.now();
               localStorage.setItem('mizentia_backup_state', JSON.stringify(backupState));
