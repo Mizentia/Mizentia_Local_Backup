@@ -9,16 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 2. Cache all DOM elements
   BackupApp.utils.cacheElements();
 
-  // 3. Initialize all sub-modules
-  BackupApp.tabs.init();
-  BackupApp.dashboard.init();
-  BackupApp.scanner.init();
-  BackupApp.restore.init();
-  BackupApp.ignore.init();
-  BackupApp.settings.init();
-  BackupApp.git.init();
-
-  // 4. Initial System boot checks
+  // 3. Initial System boot checks (Run before sub-module initialization)
   let isServerless = false;
   try {
     const ping = await fetch('/api/status');
@@ -75,6 +66,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // 4. Initialize all sub-modules (with correct isServerless state!)
+  BackupApp.tabs.init();
+  BackupApp.dashboard.init();
+  BackupApp.scanner.init();
+  BackupApp.restore.init();
+  BackupApp.ignore.init();
+  BackupApp.settings.init();
+  BackupApp.git.init();
+
   BackupApp.dashboard.fetchStatus().then(() => {
     BackupApp.utils.logToConsole('Local Backup system state initialized.', 'success');
     
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (typeof BackupApp.scanner.scan === 'function') {
       if (BackupApp.state.isServerless) {
         if (BackupApp.state.sourceDirHandle) {
-          BackupApp.scanner.scan(false, false);
+          BackupApp.scanner.scan(false, false, true); // passes isBoot = true
         }
       } else {
         BackupApp.scanner.scan(false, true);

@@ -2,7 +2,7 @@ let activeScanEventSource = null;
 let lastScanProgress = { percent: 5, text: 'ধাপ ১: স্ক্যানার কানেকশন এস্টাবলিশ করা হচ্ছে...' };
 let isScanMinimized = false;
 
-BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false) {
+BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false, isBoot = false) {
   BackupApp.utils.logToConsole('Scanning local project workspace for modifications...', 'info');
   
   const logoIcon = document.querySelector('.logo-icon svg');
@@ -24,6 +24,11 @@ BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false) {
     try {
       let permission = await BackupApp.state.sourceDirHandle.queryPermission({ mode: 'readwrite' });
       if (permission !== 'granted') {
+        if (isBoot) {
+          BackupApp.utils.logToConsole('Workspace folder loaded. Click "Scan Now" to authorize and scan.', 'info');
+          if (logoIcon) logoIcon.classList.remove('sync-icon-anim');
+          return;
+        }
         BackupApp.utils.logToConsole('Requesting permission to access workspace folder...', 'info');
         permission = await BackupApp.state.sourceDirHandle.requestPermission({ mode: 'readwrite' });
         if (permission !== 'granted') {
