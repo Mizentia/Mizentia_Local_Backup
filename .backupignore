@@ -1,0 +1,18 @@
+# Mizentia Backup System Ignore Rules
+# These patterns describe which folders and files should NEVER be backed up.
+
+# Dependencies & Build artifacts
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+
+# Git history & credentials
+**/.git/
+
+# Backup System files & caches
+**/.tmp.drivedownload/
+**/.tmp.driveupload/
+config.json
+state.json
+

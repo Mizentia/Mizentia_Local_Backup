@@ -1,0 +1,111 @@
+<header class="content-header">
+  <div class="header-title">
+    <h2>ব্যবহার নির্দেশিকা ও সিস্টেম বিবরণী</h2>
+    <p>মিজেনশিয়া ব্যাকআপ ইঞ্জিনের প্রতিটি ফাইল এবং সেকশনের বিস্তারিত বিবরণ ও ব্যবহারের ম্যানুয়াল।</p>
+  </div>
+</header>
+
+<div class="instructions-container" style="display: flex; flex-direction: column; gap: 20px;">
+  <!-- 1. General Intro -->
+  <div class="glass-card settings-card">
+    <h3 style="color: var(--text-cyan); display: flex; align-items: center; gap: 8px;">
+      📖 ১. প্রজেক্ট পরিচিতি ও উদ্দেশ্য (Introduction)
+    </h3>
+    <p style="margin-top: 10px; line-height: 1.6; font-size: 0.9rem; color: var(--text-muted);">
+      <strong>Mizentia Local Backup System</strong> হলো একটি নির্ভরযোগ্য ও দ্রুতগতির লোকাল ফাইল সিঙ্ক এবং গুগল ড্রাইভ ব্যাকআপ ইঞ্জিন। প্রজেক্টের প্রধান উদ্দেশ্য হলো লোকাল কম্পিউটারের ফাইলসমূহ ট্র্যাক করা, ডিলিট বা এডিট হওয়া ফাইল শনাক্ত করা এবং সেগুলোকে সুনির্দিষ্ট গুগল ড্রাইভ ডিরেক্টরিতে সিঙ্ক্রোনাইজড রাখা। এটি লোকাল নেটওয়ার্কে শেয়ার করার জন্য এক্সপোজড আইপি সহ রান করতে পারে।
+    </p>
+  </div>
+
+  <!-- 2. File and Folder Descriptions -->
+  <div class="glass-card settings-card">
+    <h3 style="color: var(--text-cyan); display: flex; align-items: center; gap: 8px;">
+      📁 ২. ফাইল ও ফোল্ডার বিবরণী (File & Folder Descriptions)
+    </h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;"><code>Mizentia_Local_Backup</code> ফোল্ডারের অধীনে প্রতিটি ফাইলের ভূমিকা ও প্রয়োজনীয়তা নিচে আলোচনা করা হলো:</p>
+    
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid var(--text-cyan);">
+        <strong style="color: #fff;">server.js (ব্যাকএন্ড সার্ভার স্ক্রিপ্ট)</strong>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">এটি পুরো সিস্টেমের মূল প্রাণকেন্দ্র। এক্সপ্রেস (Express.js) দিয়ে তৈরি এই সার্ভার ফাইল সিলেকশন, গুগল ড্রাইভ এپیআই ইন্টিগ্রেশন, লোকাল প্রজেক্ট স্ক্যানিং এবং ব্যাকআপ সিঙ্ক নিয়ন্ত্রণ করে। এছাড়াও এটি গিটহাব পুশের ব্যাকএন্ড কমান্ড এবং ডাইনামিক ইগনোর প্রসেস পরিচালনা করে।</p>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid #818cf8;">
+        <strong style="color: #fff;">public/ (ফ্রন্টএন্ড ইউজার ইন্টারফেস)</strong>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">এই ডিরেক্টরিটির ভেতর ইউজার ইন্টারফেসের <code>index.html</code> (লেআউট), <code>index.js</code> (অ্যাকশন ও এপিআই রিকোয়েস্ট লজিক) এবং স্টাইলিং ফাইলসমূহ রয়েছে। এটি সমস্ত ভিজ্যুয়াল ডিজাইন এবং ব্যবহারকারীর ডেটা গ্রাফিক্যাল আকারে উপস্থাপন করে।</p>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid #f59e0b;">
+        <strong style="color: #fff;">config.json (কনফিগারেশন ফাইল)</strong>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">সিস্টেমের সক্রিয় সেটিংস এখানে অবিরত সেভ থাকে। এর মধ্যে লোকাল ওয়ার্কস্পেস পাথ (<code>localWorkspaceRoot</code>), গুগল ড্রাইভ রুট ফোল্ডার আইডি (<code>driveFolderId</code>), লোকাল ড্রাইভ সিনক্রোনাইজেশন পাথ (<code>localDrivePath</code>) এবং ওঅথ২ ক্লায়েন্ট ক্রেডেনশিয়ালস সংরক্ষিত থাকে।</p>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid #10b981;">
+        <strong style="color: #fff;">state.json (ব্যাকআপ মেটাডেটা ডাটাবেস)</strong>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">এটি একটি লোকাল ইন-মেমোরি ডাটাবেস যা সফলভাবে ড্রাইভে কপি করা ফাইল এবং ফোল্ডারগুলির আকার, পরিবর্তনের সময় (mtime), কনটেন্ট হ্যাশ (SHA-256) এবং ড্রাইভ ফাইল আইডি ট্র্যাক করে। ফাইল সিঙ্ক সম্পন্ন হলে এই ফাইলটি আপডেট করা হয় যাতে পরবর্তীতে অতিরিক্ত স্ক্যান এড়ানো যায়।</p>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid #06b6d4;">
+        <strong style="color: #fff;">run-dev.js (লোকাল নেটওয়ার্ক স্টার্টার)</strong>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">সার্ভারটি শুধুমাত্র লোকালহোস্টে চালু না করে আপনার লোকাল ওয়াইফাই নেটওয়ার্কের আইপি এড্রেসটি (যেমন: <code>http://192.168.0.x:3000</code>) বের করে রান করে। এর ফলে একই ওয়াইফাই রাউটারের সাথে যুক্ত মোবাইল বা অন্য কম্পিউটার থেকেও প্যানেলটি ব্যবহার করা যায়।</p>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid #ec4899;">
+        <strong style="color: #fff;">run-backup-system.bat (স্টার্টআপ স্ক্রিপ্ট)</strong>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">ডাব্লিউ-ক্লিক করে ব্যাকআপ ইঞ্জিনটি শুরু করার জন্য একটি উইন্ডোজ শর্টকাট। এটি <code>node run-dev.js</code> রান করে এবং স্বয়ংক্রিয়ভাবে ব্রাউজারে ড্যাশবোর্ড পেজটি ওপেন করে।</p>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border-left: 3px solid #f43f5e;">
+        <strong style="color: #fff;">push_to_github.bat (গিটহাব অটোমেটিক পুশার)</strong>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">এই স্ক্রিপ্টটি ডাবল-ক্লিক করলে আপনার এই ব্যাকআপ ইঞ্জিনটির যাবতীয় ফাইলসমূহ স্বয়ংক্রিয়ভাবে আপনার গিটহাব রিপোজিটরিতে অ্যাড, কমিট ও পুশ করে দেয়।</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Web UI Guide -->
+  <div class="glass-card settings-card">
+    <h3 style="color: var(--text-cyan); display: flex; align-items: center; gap: 8px;">
+      🖥️ ৩. ওয়েব অ্যাপ্লিকেশন ফিচার ও ব্যবহার বিধি (Web App Sections Guide)
+    </h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">ওয়েব ড্যাশবোর্ডের প্রতিটি পেজ ও ফিচারের কাজ নিচে বর্ণনা করা হলো:</p>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+      <div style="background: rgba(255,255,255,0.01); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+        <strong style="color: var(--text-cyan);">ড্যাশবোর্ড (Dashboard)</strong>
+        <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 15px; margin-top: 5px; line-height: 1.4;">
+          <li>মোট ব্যাকআপ করা ফাইল ও ফোল্ডারের বর্তমান কাউন্টার দেখা যায়।</li>
+          <li>লোকাল ফাইল ও ড্রাইভ ফাইলের এক্সটেনশন ভিত্তিক পাই গ্রাফ ও চার্ট দেখায়।</li>
+          <li>সিস্টেম অ্যাকশন লগসমূহ লাইভ কনসোল আকারে মনিটর করা যায়।</li>
+          <li>এক ক্লিকে প্রজেক্ট রিপোজিটরি গিটহাবে পুশ করার প্যানেল।</li>
+        </ul>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.01); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+        <strong style="color: var(--text-cyan);">ব্যাকআপ স্ক্যানার (Backup Scanner)</strong>
+        <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 15px; margin-top: 5px; line-height: 1.4;">
+          <li>রুট প্রজেক্ট স্ক্যান করে যুক্ত হওয়া (NEW), এডিট হওয়া (MODIFIED) ও মুছে যাওয়া (DELETED) ফাইল-ফোল্ডারের ট্রি গঠন করে।</li>
+          <li>নির্দিষ্ট ফাইল/ফোল্ডার সিলেক্ট করে গুগল ড্রাইভে ম্যানুয়াল ব্যাকআপ নেওয়া যায়।</li>
+          <li>স্ক্যান চলাকালীন মিনিমাইজ করে অন্যান্য পেজে কাজ চালিয়ে যাওয়া সম্ভব।</li>
+        </ul>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.01); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+        <strong style="color: var(--text-cyan);">রিস্টোর সেন্টার (Restore Center)</strong>
+        <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 15px; margin-top: 5px; line-height: 1.4;">
+          <li>বাম পাশে লোকাল ফাইল ট্রি ও ডান পাশে গুগল ড্রাইভ ফাইল ট্রির একটি প্যারালাল বা সমান্তরাল ভিউ দেখায়।</li>
+          <li>ড্রাইভ প্যানেল থেকে ফাইল সরাসরি সিলেক্ট করে লোকালে ডাউনলোড বা রিস্টোর করা যায়।</li>
+          <li>দুই পাশের যেকোনো প্যানেল থেকে ফাইল ডিলিট বা ড্রাইভ ফাইল রিসিনক্রোনাইজ করা যায়।</li>
+        </ul>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.01); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+        <strong style="color: var(--text-cyan);">ইগনোর রুলস (Ignore Rules)</strong>
+        <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 15px; margin-top: 5px; line-height: 1.4;">
+          <li>যে ফাইল বা ফোল্ডারগুলো আপনি ব্যাকআপে বা স্ক্যানে রাখতে চান না, সেগুলো এখান থেকে ইগনোর করা যায়।</li>
+          <li>বাম পাশে ইন্টারেক্টিভ ডিরেক্টরি ব্রাউজার থেকে সরাসরি ক্লিক করে যেকোনো ফাইল বা ফোল্ডার ইগনোর রুলসে যোগ করা সম্ভব।</li>
+          <li>নির্দিষ্ট পাথ হিসেবে ইগনোর (Specific Path) নাকি সব জায়গায় ইগনোর (Global Pattern) হবে তা নির্ধারণের ব্যবস্থা রয়েছে।</li>
+          <li>ম্যানুয়াল এডিটর ব্যবহার করে রুলস কাস্টমাইজ করা যায়।</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

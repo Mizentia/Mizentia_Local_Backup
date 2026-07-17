@@ -1,0 +1,139 @@
+/* Settings Form Controls */
+.settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-card h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.connection-types {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.connection-type-option {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  position: relative;
+}
+
+.connection-type-option input[type="radio"] {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  accent-color: var(--accent-indigo);
+}
+
+.connection-type-option:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.connection-type-option.active {
+  background: rgba(99, 102, 241, 0.05);
+  border-color: var(--accent-indigo);
+}
+
+.option-icon {
+  font-size: 1.8rem;
+}
+
+.option-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 15px;
+}
+
+.option-details strong {
+  font-size: 0.95rem;
+  color: white;
+}
+
+.option-details span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.form-control {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: white;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+  transition: var(--transition-fast);
+}
+
+.form-control:focus {
+  border-color: var(--accent-indigo);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+textarea.form-control {
+  resize: vertical;
+}
+
+.code-font {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85rem;
+}
+
+.form-text {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.cred-fields-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.oauth-status-action {
+  margin-bottom: 20px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 20px;
+}

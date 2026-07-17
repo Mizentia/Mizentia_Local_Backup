@@ -1,0 +1,130 @@
+<header class="content-header">
+  <div class="header-title">
+    <h2>সিস্টেম সেটিংস (System Settings)</h2>
+    <p>আপনার প্রজেক্ট ডিরেক্টরি, ব্যাকআপ টাইপ এবং গুগল একাউন্ট কানেকশন কনফিগার করুন।</p>
+  </div>
+  <button class="btn btn-primary" id="btnSaveConfig">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    কনফিগারেশন সেভ করুন
+  </button>
+</header>
+
+<div class="settings-container">
+  <!-- 1. Workspace Configuration -->
+  <div class="glass-card settings-card">
+    <h3>📂 প্রজেক্ট পাথ কনফিগারেশন</h3>
+    <div class="form-group" style="margin-bottom: 0;">
+      <label for="localWorkspaceRoot">লোকাল প্রজেক্ট ডিরেক্টরি (Workspace Root Path)</label>
+      <div style="display: flex; gap: 10px;">
+        <input type="text" id="localWorkspaceRoot" class="form-control code-font" placeholder="যেমন: C:\Users\USER\Desktop\Mizentia All Project">
+        <button class="btn btn-secondary" id="btnSetDefaultWorkspace" style="white-space: nowrap;">ডিফল্ট পাথ সেট করুন</button>
+      </div>
+      <span class="form-text">এই সিস্টেমটি এই ফোল্ডারের মধ্যকার ফাইল ও ফোল্ডারসমূহের ব্যাকআপ সিঙ্ক তদারকি করবে।</span>
+    </div>
+  </div>
+
+  <!-- 2. Connection Type Selection -->
+  <div class="glass-card settings-card">
+    <h3>☁️ ব্যাকআপ স্টোরেজ কানেকশন টাইপ</h3>
+    <div class="connection-types">
+      <label class="connection-type-option active" id="optionSim">
+        <input type="radio" name="connectionType" value="simulation" checked>
+        <div class="option-icon">⚙️</div>
+        <div class="option-details">
+          <strong>সিমুলেশন মোড (Simulation Mode)</strong>
+          <span>গুগল একাউন্ট ছাড়াই ব্যাকআপ ইঞ্জিনটি টেস্ট করার জন্য এটি ব্যবহার করুন। ফাইলগুলো লোকালেই একটি সাময়িক ক্যাশে থাকবে।</span>
+        </div>
+      </label>
+
+      <label class="connection-type-option" id="optionLocalDrive">
+        <input type="radio" name="connectionType" value="local_drive">
+        <div class="option-icon">📂</div>
+        <div class="option-details">
+          <strong>লোকাল ড্রাইভ ব্যাকআপ (Google Drive Desktop)</strong>
+          <span>আপনার পিসির লোকাল গুগল ড্রাইভ ফোল্ডারের (যেমন: <code>G:\My Drive</code>) মাধ্যমে ব্যাকআপ করতে এটি ব্যবহার করুন।</span>
+        </div>
+      </label>
+
+      <label class="connection-type-option" id="optionSa">
+        <input type="radio" name="connectionType" value="service_account">
+        <div class="option-icon">🤖</div>
+        <div class="option-details">
+          <strong>সার্ভিস অ্যাকাউন্ট (Service Account Key)</strong>
+          <span>একটি গুগল ক্লাউড সার্ভিস অ্যাকাউন্ট কী (JSON) দিয়ে সরাসরি ব্যাকআপ নিন। কোনো ওঅথ ও ব্রাউজার লগইনের প্রয়োজন নেই।</span>
+        </div>
+      </label>
+
+      <label class="connection-type-option" id="optionOAuth">
+        <input type="radio" name="connectionType" value="oauth2">
+        <div class="option-icon">🔑</div>
+        <div class="option-details">
+          <strong>ওঅথ২ ব্যবহারকারী লগইন (OAuth2 User login)</strong>
+          <span>আপনার গুগল একাউন্টের ক্লায়েন্ট আইডি ও সিক্রেট ব্যবহার করে ব্রাউজারে লগইনের মাধ্যমে সিকিউর কানেকশন তৈরি করুন।</span>
+        </div>
+      </label>
+    </div>
+
+    <!-- Dynamic Credentials Fields based on Selection -->
+    <div class="cred-fields-section">
+      <!-- Service Account config field -->
+      <div id="saConfigFields" style="display: none;">
+        <div class="form-group">
+          <label for="saKeyJson">গুগল ক্লাউড সার্ভিস অ্যাকাউন্ট প্রাইভেট কী (JSON Key File Content)</label>
+          <textarea id="saKeyJson" rows="8" class="form-control code-font" placeholder='{ "type": "service_account", "project_id": ... }'></textarea>
+          <span class="form-text">আপনার Google Cloud Console থেকে ডাউনলোড করা সার্ভিস একাউন্ট JSON ফাইলের পুরো টেক্সটটি কপি করে এখানে পেস্ট করুন।</span>
+        </div>
+      </div>
+
+      <!-- Local Drive config field -->
+      <div id="localDriveFields" style="display: none;">
+        <div class="form-group">
+          <label for="localDrivePath">লোকাল ড্রাইভ রুট পাথ (Google Drive Mount Path on PC)</label>
+          <input type="text" id="localDrivePath" class="form-control code-font" placeholder="যেমন: G:\My Drive  অথবা  D:\GoogleDriveBackup">
+          <span class="form-text">গুগল ড্রাইভ ডেস্কটপ অ্যাপ্লিকেশনের লোকাল ড্রাইভ পাথটি এখানে প্রদান করুন। ব্যাকআপ এই ডিরেক্টরিতে প্রজেক্ট ফোল্ডার নামে সিঙ্ক হবে।</span>
+        </div>
+      </div>
+
+      <!-- OAuth2 config fields -->
+      <div id="oauthConfigFields" style="display: none;">
+        <div class="alert alert-info">
+          <strong>Redirect URI:</strong> <code id="oauthRedirectUri">http://localhost:3000/api/gdrive/callback</code><br>
+          আপনার Google Cloud Console Credentials সেকশনে Authorized redirect URIs-এর মধ্যে এই লিংকটি যোগ করতে ভুলবেন না।
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="oauthClientId">Client ID</label>
+            <input type="text" id="oauthClientId" class="form-control code-font" placeholder="E.g., xxxxx-xxxxx.apps.googleusercontent.com">
+          </div>
+          <div class="form-group">
+            <label for="oauthClientSecret">Client Secret</label>
+            <input type="password" id="oauthClientSecret" class="form-control code-font" placeholder="Client secret string">
+          </div>
+        </div>
+        
+        <div class="oauth-status-action" id="oauthActionWrapper" style="display: none; margin-top: 15px;">
+          <button class="btn btn-secondary" id="btnStartOAuth">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            গুগল একাউন্ট অথেনটিকেশন করুন (Authenticate GDrive)
+          </button>
+        </div>
+      </div>
+      
+      <!-- Target Folder ID Field (Needed for service_account & oauth2) -->
+      <div id="targetFolderIdField" style="display: none; margin-top: 15px;">
+        <div class="form-group">
+          <label for="driveFolderId">গুগল ড্রাইভ রুট ফোল্ডার আইডি (Google Drive Folder ID - Optional)</label>
+          <input type="text" id="driveFolderId" class="form-control code-font" placeholder="যেমন: 1aBcDeFgHiJkLmNoPqRsTuVwXyZ12345">
+          <span class="form-text">খালি রাখলে ব্যাকআপ ফাইলগুলো সরাসরি আপনার গুগল ড্রাইভের রুট (My Drive) ফোল্ডারে আপলোড হবে। নির্দিষ্ট ফোল্ডারে ব্যাকআপ রাখতে চাইলে তার আইডি দিন।</span>
+        </div>
+      </div>
+
+      <!-- Connection status and test action -->
+      <div class="settings-actions">
+        <button class="btn btn-secondary" id="btnTestConnection">
+          🧪 কানেকশন টেস্ট করুন (Test Connection)
+        </button>
+        <div id="testConnResult" style="display: flex; align-items: center; font-size: 0.85rem; font-weight: 500;"></div>
+      </div>
+    </div>
+  </div>
+</div>

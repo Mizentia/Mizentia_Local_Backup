@@ -1,0 +1,78 @@
+/* Restore grid system */
+.restore-dual-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.panel-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.restore-tree-body {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.restore-node {
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.restore-node:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.restore-node.selected {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.15);
+}
+
+.restore-node .node-icon {
+  color: var(--accent-indigo);
+}
+
+.restore-node .node-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-grow: 1;
+}
+
+.restore-node .node-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.restore-node .node-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.restore-sync-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 15px 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+}

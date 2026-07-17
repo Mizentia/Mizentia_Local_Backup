@@ -1,0 +1,60 @@
+<header class="content-header">
+  <div class="header-title">
+    <h2>ইগনোর রুলস এডিটর (.backupignore)</h2>
+    <p>যেসব ফোল্ডার বা ফাইল ব্যাকআপের প্রয়োজন নেই (যেমন: node_modules, বিল্ড ফোল্ডার), সেগুলো এখানে নির্ধারণ করুন।</p>
+  </div>
+  <div style="display: flex; gap: 10px;">
+    <button class="btn btn-secondary" id="btnCancelIgnoreChanges" style="display: flex; align-items: center; gap: 6px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><polyline points="3 3 3 8 8 8"/></svg>
+      পরিবর্তন বাতিল (Discard)
+    </button>
+    <button class="btn btn-primary" id="btnSaveIgnore" style="display: flex; align-items: center; gap: 6px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      সেভ করুন (Save Rules)
+    </button>
+  </div>
+</header>
+
+<div class="grid-layout">
+  <!-- Workspace Browser Panel -->
+  <div class="glass-card main-panel" style="flex: 1.2;">
+    <div class="panel-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+      <h3>১. ওয়ার্কস্পেস প্রজেক্ট ব্রাউজার</h3>
+      <p style="font-size: 0.8rem; opacity: 0.7; margin: 0; margin-top: 4px;">ডিরেক্টরি ব্রাউজ করুন এবং ফাইল/ফোল্ডার ইগনোর লিস্টে যোগ করতে 🚫 চিহ্নে ক্লিক করুন</p>
+    </div>
+    <div class="ignore-tree-body" id="ignoreWorkspaceBrowser" style="padding-top: 15px; max-height: 480px; overflow-y: auto;">
+      <!-- Dynamically populated workspace tree -->
+      <div class="empty-state">
+        <p>লোকাল ফাইল ম্যানেজার লোড হচ্ছে...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Rules & Text Editor Panel -->
+  <div class="glass-card side-panel" style="flex: 0.8; display: flex; flex-direction: column;">
+    <div class="panel-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px;">
+      <h3>২. সক্রিয় ইগনোর রুলস</h3>
+    </div>
+    
+    <!-- Rules list -->
+    <div class="active-rules-list" id="activeRulesList" style="flex: 1; overflow-y: auto; max-height: 200px; margin-bottom: 15px; padding-right: 5px;">
+      <!-- Dynamic chips/rows -->
+      <div style="font-size: 0.85rem; opacity: 0.5; text-align: center; padding: 20px 0;">কোন সক্রিয় রুলস পাওয়া যায়নি।</div>
+    </div>
+    
+    <div class="editor-raw-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <h4 style="margin: 0; font-size: 0.85rem; text-transform: uppercase; color: #a5b4fc; letter-spacing: 0.05em;">ম্যানুয়াল এডিটর (.backupignore)</h4>
+    </div>
+    <textarea id="ignoreRulesTextarea" spellcheck="false" placeholder="# এখানে ইগনোর প্যাটার্নগুলো লিখুন (যেমন: node_modules/)" style="width: 100%; min-height: 120px; font-family: monospace; font-size: 0.8rem; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px; color: #fff; resize: vertical; line-height: 1.4;"></textarea>
+    
+    <!-- Common hints -->
+    <div class="common-hints-collapsed" style="margin-top: 12px; font-size: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 8px; opacity: 0.8;">
+      <span style="opacity: 0.6;">কমন প্যাটার্নস (ক্লিক করুন): </span>
+      <a href="#" class="hint-link" data-pattern="node_modules/">node_modules</a> | 
+      <a href="#" class="hint-link" data-pattern=".next/">.next</a> | 
+      <a href="#" class="hint-link" data-pattern="dist/">dist</a> | 
+      <a href="#" class="hint-link" data-pattern=".git/">.git</a> | 
+      <a href="#" class="hint-link" data-pattern="*.log">*.log</a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mizentia Local Backup - Browser Engine</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #0b0c10;
+      --card-bg: rgba(31, 40, 51, 0.45);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #c5c6c7;
+      --text-muted: #8b949e;
+      --text-cyan: #66fcf1;
+      --text-indigo: #818cf8;
+      --text-amber: #f59e0b;
+      --text-red: #ef4444;
+      --btn-hover: #45f2e6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Glow blobs */
+    .bg-glow {
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(102,252,241,0.08) 0%, rgba(102,252,241,0) 70%);
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(40px);
+    }
+    .bg-glow-1 { top: -10%; left: -10%; }
+    .bg-glow-2 { bottom: -10%; right: -10%; }
+
+    header {
+      padding: 25px 40px;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(11, 12, 16, 0.6);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      color: var(--text-cyan);
+      animation: rotate 15s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .brand span {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: block;
+      margin-top: -2px;
+    }
+
+    .nav-back-btn {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--card-border);
+      padding: 8px 16px;
+      color: var(--text-main);
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .nav-back-btn:hover {
+      background: rgba(102,252,241,0.05);
+      border-color: var(--text-cyan);
+      color: var(--text-cyan);
+    }
+
+    main {
+      flex-grow: 1;
+      padding: 30px 40px;
+      z-index: 10;
+      max-width: 1600px;
+      width: 100%;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 30px;
+    }
+
+    /* Column Styles */
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .glass-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 24px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s;
+    }
+
+    .glass-card:hover {
+      border-color: rgba(102,252,241,0.15);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 10px;
+    }
+
+    .card-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--text-cyan);
+    }
+
+    /* Buttons */
+    .btn {
+      background: var(--text-cyan);
+      color: var(--bg-dark);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    .btn:hover {
+      background: var(--btn-hover);
+      box-shadow: 0 0 12px rgba(102,252,241,0.3);
+      transform: translateY(-1px);
+    }
+    .btn:disabled {
+      background: rgba(255,255,255,0.05) !important;
+      color: var(--text-muted) !important;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+      box-shadow: none;
+    }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .form-control {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--card-border);
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--text-cyan);
+      box-shadow: 0 0 8px rgba(102,252,241,0.15);
+    }
+
+    /* Tab Selector */
+    .dest-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      background: rgba(0,0,0,0.2);
+      padding: 4px;
+      border-radius: 8px;
+    }
+    .dest-tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .dest-tab.active {
+      background: var(--card-bg);
+      color: var(--text-cyan);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Workspace Browser Tree */
+    .tree-container {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 15px;
+      height: 350px;
+      overflow-y: auto;
+    }
+
+    .tree-node-wrapper {
+      margin-left: 12px;
+    }
+    .tree-node {
+      display: flex;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.15s;
+    }
+    .tree-node:hover {
+      background: rgba(255,255,255,0.02);
+    }
+    .tree-node.selected {
+      background: rgba(102,252,241,0.05);
+    }
+
+    .node-icon {
+      margin-right: 6px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .node-info {
+      display: flex;
+      justify-content: space-between;
+      flex-grow: 1;
+    }
+    .node-name {
+      color: var(--text-main);
+    }
+    .node-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Checkbox */
+    .checkbox-container {
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+      position: relative;
+    }
+    .checkbox-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .checkbox-mark {
+      height: 14px;
+      width: 14px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--card-border);
+      border-radius: 3px;
+      display: inline-block;
+      margin-right: 8px;
+      position: relative;
+    }
+    .checkbox-container input:checked ~ .checkbox-mark {
+      background: var(--text-cyan);
+      border-color: var(--text-cyan);
+    }
+    .checkbox-container input:checked ~ .checkbox-mark::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 1px;
+      width: 3px;
+      height: 6px;
+      border: solid var(--bg-dark);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    /* Console Action Logs */
+    .console-logs {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 15px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      height: 250px;
+      overflow-y: auto;
+      color: #a3b3c6;
+    }
+    .log-line {
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+    .log-info { color: var(--text-indigo); }
+    .log-success { color: var(--text-cyan); }
+    .log-error { color: var(--text-red); }
+    .log-warning { color: var(--text-amber); }
+
+    /* Info Banner */
+    .info-banner {
+      background: rgba(102,252,241,0.03);
+      border: 1px solid rgba(102,252,241,0.15);
+      border-radius: 8px;
+      padding: 12px 15px;
+      font-size: 0.8rem;
+      color: var(--text-main);
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+    .info-banner svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-cyan);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      opacity: 0.3;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <header>
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+      </svg>
+      <div>
+        <h1>Mizentia Local Backup</h1>
+        <span>সার্ভারলেস ব্রাউজার ইঞ্জিন (v1.0 - Client Side)</span>
+      </div>
+    </div>
+    <a href="index.html" class="nav-back-btn">লোকাল ড্যাশবোর্ডে ফিরুন</a>
+  </header>
+
+  <main>
+    <!-- Left Column: Source Selection and Explorer -->
+    <div class="column">
+      <div class="glass-card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          ১. সোর্স প্রজেক্ট ফোল্ডার নির্বাচন
+        </div>
+        
+        <div class="info-banner">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <div>
+            নিচের বাটনে ক্লিক করে আপনার কম্পিউটারের যেকোনো প্রজেক্ট ডিরেক্টরি নির্বাচন করুন। ব্রাউজারের সিকিউরিটি রুলস অনুযায়ী এটি সম্পূর্ণ সুরক্ষিত ও লোকাল থাকবে।
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button class="btn" id="btnSelectSource">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            ফোল্ডার সিলেক্ট করুন (Select Folder)
+          </button>
+          <span id="selectedSourceLabel" style="font-size: 0.85rem; color: var(--text-muted); display: inline-flex; align-items: center; word-break: break-all;">কোনো ফোল্ডার সিলেক্ট করা নেই</span>
+        </div>
+      </div>
+
+      <div class="glass-card" style="flex-grow: 1; display: flex; flex-direction: column;">
+        <div class="card-title" style="margin-bottom: 12px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          ফাইল এক্সপ্লোরার এবং সিলেকশন
+        </div>
+        
+        <div class="tree-container" style="flex-grow: 1;" id="explorerContainer">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            ফোল্ডার সিলেক্ট করার পর ফাইল তালিকা এখানে প্রদর্শিত হবে।
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Sync Target Options & Action Logs -->
+    <div class="column">
+      <div class="glass-card">
+        <div class="card-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          ২. ব্যাকআপ গন্তব্য এবং সিঙ্ক অপশনস
+        </div>
+
+        <div class="dest-tabs">
+          <div class="dest-tab active" id="tabLocal" onclick="switchDestTab('local')">📁 লোকাল ব্যাকআপ / USB</div>
+          <div class="dest-tab" id="tabGithub" onclick="switchDestTab('github')">🚀 GitHub সিঙ্ক</div>
+          <div class="dest-tab" id="tabGDrive" onclick="switchDestTab('gdrive')">☁️ Google Drive</div>
+        </div>
+
+        <!-- Local Backup fields -->
+        <div id="fieldsLocal" class="dest-fields">
+          <div class="info-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div>
+              আপনার লোকাল ড্রাইভে বা কোনো এক্সটার্নাল পেনড্রাইভ/হার্ডডিস্কের একটি ফোল্ডারকে ব্যাকআপ গন্তব্য হিসেবে বেছে নিন।
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn btn-secondary" id="btnSelectDest">ব্যাকআপ গন্তব্য সিলেক্ট করুন</button>
+            <span id="selectedDestLabel" style="font-size: 0.85rem; color: var(--text-muted); word-break: break-all;">পাথ সিলেক্ট করা নেই</span>
+          </div>
+        </div>
+
+        <!-- GitHub fields -->
+        <div id="fieldsGithub" class="dest-fields" style="display: none;">
+          <div class="form-group">
+            <label for="ghPat">GitHub Personal Access Token (PAT)</label>
+            <input type="password" id="ghPat" class="form-control" placeholder="ghp_xxxxxxxxxxxx">
+          </div>
+          <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 15px;">
+            <div class="form-group">
+              <label for="ghRepo">গিটহাব রিপোজিটরি (owner/repo)</label>
+              <input type="text" id="ghRepo" class="form-control" placeholder="Username/repository-name">
+            </div>
+            <div class="form-group">
+              <label for="ghBranch">শাखा (Branch)</label>
+              <input type="text" id="ghBranch" class="form-control" value="main" placeholder="main">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="ghCommitMsg">কমিট মেসেজ (Commit Message)</label>
+            <input type="text" id="ghCommitMsg" class="form-control" placeholder="Auto-backup via Mizentia Web Engine">
+          </div>
+        </div>
+
+        <!-- Google Drive fields -->
+        <div id="fieldsGDrive" class="dest-fields" style="display: none;">
+          <div class="form-group">
+            <label for="gdToken">গুগল ড্রাইভ অ্যাক্সেস টোকেন (AccessToken)</label>
+            <input type="password" id="gdToken" class="form-control" placeholder="ya29.a0AfB_xxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label for="gdFolderId">টার্গেট ফোল্ডার আইডি (ঐচ্ছিক)</label>
+            <input type="text" id="gdFolderId" class="form-control" placeholder="মূল ডিরেক্টরি ব্যবহার করতে খালি রাখুন">
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+          <span id="syncStatusText" style="font-size: 0.85rem; color: var(--text-muted);">প্রস্তুত</span>
+          <button class="btn" id="btnStartSync" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            ব্যাকআপ ও সিঙ্ক করুন
+          </button>
+        </div>
+      </div>
+
+      <!-- Action logs -->
+      <div class="glass-card" style="flex-grow: 1; display: flex; flex-direction: column;">
+        <div class="card-title" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <span>সিস্টেম অ্যাকশন লগ (Action Console)</span>
+          <button id="btnClearLogs" style="background:none;border:none;color:var(--text-cyan);font-size:0.8rem;cursor:pointer;">Clear</button>
+        </div>
+        <div class="console-logs" id="consoleLogs" style="flex-grow: 1;">
+          <div class="log-line log-info">[Mizentia Web Engine] loaded. System is ready.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // State Variables
+    let sourceDirHandle = null;
+    let destDirHandle = null;
+    let currentDestTab = 'local';
+    let fileList = [];
+    const selectedPaths = new Set();
+
+    // DOM Elements
+    const btnSelectSource = document.getElementById('btnSelectSource');
+    const selectedSourceLabel = document.getElementById('selectedSourceLabel');
+    const btnSelectDest = document.getElementById('btnSelectDest');
+    const selectedDestLabel = document.getElementById('selectedDestLabel');
+    const explorerContainer = document.getElementById('explorerContainer');
+    const btnStartSync = document.getElementById('btnStartSync');
+    const consoleLogs = document.getElementById('consoleLogs');
+    const btnClearLogs = document.getElementById('btnClearLogs');
+    const syncStatusText = document.getElementById('syncStatusText');
+
+    // Tab Switches
+    function switchDestTab(tab) {
+      currentDestTab = tab;
+      document.querySelectorAll('.dest-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.add('active');
+      
+      document.querySelectorAll('.dest-fields').forEach(f => f.style.display = 'none');
+      document.getElementById(`fields${tab.charAt(0).toUpperCase() + tab.slice(1)}`).style.display = 'block';
+
+      updateSyncButtonState();
+    }
+
+    // Logger
+    function log(message, type = 'normal') {
+      const line = document.createElement('div');
+      line.className = `log-line log-${type}`;
+      line.innerText = `[${new Date().toLocaleTimeString()}] ${message}`;
+      consoleLogs.appendChild(line);
+      consoleLogs.scrollTop = consoleLogs.scrollHeight;
+    }
+
+    btnClearLogs.addEventListener('click', () => {
+      consoleLogs.innerHTML = '';
+      log('Console cleared.', 'info');
+    });
+
+    // Select Source Directory
+    btnSelectSource.addEventListener('click', async () => {
+      try {
+        sourceDirHandle = await window.showDirectoryPicker();
+        selectedSourceLabel.textContent = sourceDirHandle.name;
+        log(`Source folder selected: ${sourceDirHandle.name}`, 'success');
+        
+        // Scan folder
+        log('Scanning source directory recursively...', 'info');
+        fileList = await scanDirectory(sourceDirHandle);
+        log(`Scan complete. Found ${fileList.length} files.`, 'success');
+        
+        // Render Tree
+        renderTree(fileList);
+        updateSyncButtonState();
+      } catch (err) {
+        log(`Error selecting folder: ${err.message}`, 'error');
+      }
+    });
+
+    // Select Destination Directory (for Local Option)
+    btnSelectDest.addEventListener('click', async () => {
+      try {
+        destDirHandle = await window.showDirectoryPicker();
+        selectedDestLabel.textContent = destDirHandle.name;
+        log(`Backup destination selected: ${destDirHandle.name}`, 'success');
+        updateSyncButtonState();
+      } catch (err) {
+        log(`Error selecting destination: ${err.message}`, 'error');
+      }
+    });
+
+    // Scan Directory recursively
+    async function scanDirectory(directoryHandle, relativePath = '') {
+      const files = [];
+      for await (const entry of directoryHandle.values()) {
+        const entryPath = relativePath ? `${relativePath}/${entry.name}` : entry.name;
+        
+        if (entry.kind === 'file') {
+          const file = await entry.getFile();
+          files.push({
+            name: entry.name,
+            path: entryPath,
+            size: file.size,
+            handle: entry
+          });
+        } else if (entry.kind === 'folder') {
+          const subFiles = await scanDirectory(entry, entryPath);
+          files.push(...subFiles);
+        }
+      }
+      return files;
+    }
+
+    // Render tree view
+    function renderTree(files) {
+      explorerContainer.innerHTML = '';
+      selectedPaths.clear();
+      
+      if (files.length === 0) {
+        explorerContainer.innerHTML = '<div class="empty-state">No files found in folder.</div>';
+        return;
+      }
+
+      const root = { name: 'Root', type: 'folder', children: {}, path: '' };
+      
+      files.forEach(f => {
+        const parts = f.path.split('/');
+        let current = root;
+        let currentPath = '';
+
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          currentPath = currentPath ? `${currentPath}/${part}` : part;
+          const isFile = (i === parts.length - 1);
+
+          if (!current.children[part]) {
+            current.children[part] = {
+              name: part,
+              path: currentPath,
+              type: isFile ? 'file' : 'folder',
+              children: isFile ? null : {},
+              fileData: isFile ? f : null
+            };
+          }
+          current = current.children[part];
+        }
+      });
+
+      function drawNode(node, depth) {
+        if (node.name === 'Root') {
+          const container = document.createElement('div');
+          for (const child in node.children) {
+            container.appendChild(drawNode(node.children[child], depth + 1));
+          }
+          return container;
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'tree-node-wrapper';
+
+        const row = document.createElement('div');
+        row.className = 'tree-node';
+        row.style.paddingLeft = `${depth * 6}px`;
+
+        const chkContainer = document.createElement('label');
+        chkContainer.className = 'checkbox-container';
+        
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.checked = true;
+        selectedPaths.add(node.path);
+
+        chk.addEventListener('change', () => {
+          const checked = chk.checked;
+          
+          function toggleChildren(n, val) {
+            if (val) selectedPaths.add(n.path);
+            else selectedPaths.delete(n.path);
+            
+            if (n.children) {
+              for (const c in n.children) {
+                toggleChildren(n.children[c], val);
+              }
+            }
+          }
+          toggleChildren(node, checked);
+
+          // Update checkbox state in DOM
+          const checkboxes = explorerContainer.querySelectorAll('input[type="checkbox"]');
+          checkboxes.forEach(c => {
+            c.checked = selectedPaths.has(c.dataset.path);
+          });
+        });
+        
+        chk.dataset.path = node.path;
+
+        const mark = document.createElement('span');
+        mark.className = 'checkbox-mark';
+        
+        chkContainer.appendChild(chk);
+        chkContainer.appendChild(mark);
+        row.appendChild(chkContainer);
+
+        const icon = document.createElement('span');
+        icon.className = 'node-icon';
+        if (node.type === 'folder') {
+          icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#f59e0b;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+        } else {
+          icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;color:#818cf8;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`;
+        }
+        row.appendChild(icon);
+
+        const info = document.createElement('div');
+        info.className = 'node-info';
+        
+        const name = document.createElement('span');
+        name.className = 'node-name';
+        name.textContent = node.name;
+        info.appendChild(name);
+
+        const meta = document.createElement('span');
+        meta.className = 'node-meta';
+        if (node.type === 'file' && node.fileData) {
+          meta.textContent = formatBytes(node.fileData.size);
+        }
+        info.appendChild(meta);
+        row.appendChild(info);
+
+        wrapper.appendChild(row);
+
+        if (node.children && Object.keys(node.children).length > 0) {
+          const childrenContainer = document.createElement('div');
+          childrenContainer.className = 'tree-children-list';
+          childrenContainer.style.display = 'none';
+
+          for (const child in node.children) {
+            childrenContainer.appendChild(drawNode(node.children[child], depth + 1));
+          }
+          wrapper.appendChild(childrenContainer);
+
+          row.addEventListener('click', (e) => {
+            if (e.target.closest('.checkbox-container')) return;
+            const isCollapsed = childrenContainer.style.display === 'none';
+            childrenContainer.style.display = isCollapsed ? 'block' : 'none';
+          });
+        }
+
+        return wrapper;
+      }
+
+      explorerContainer.appendChild(drawNode(root, 0));
+    }
+
+    // Helper functions
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const dm = 2;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function updateSyncButtonState() {
+      if (!sourceDirHandle) {
+        btnStartSync.disabled = true;
+        return;
+      }
+
+      if (currentDestTab === 'local') {
+        btnStartSync.disabled = !destDirHandle;
+      } else if (currentDestTab === 'github') {
+        btnStartSync.disabled = false; // Enabled, validation on click
+      } else if (currentDestTab === 'gdrive') {
+        btnStartSync.disabled = false;
+      }
+    }
+
+    // Perform Sync Operations
+    btnStartSync.addEventListener('click', async () => {
+      const pathsToSync = fileList.filter(f => selectedPaths.has(f.path));
+      if (pathsToSync.length === 0) {
+        log('No files selected for backup.', 'warning');
+        return;
+      }
+
+      btnStartSync.disabled = true;
+      syncStatusText.textContent = 'সিঙ্কিং চলছে...';
+
+      try {
+        if (currentDestTab === 'local') {
+          await runLocalSync(pathsToSync);
+        } else if (currentDestTab === 'github') {
+          await runGithubSync(pathsToSync);
+        } else if (currentDestTab === 'gdrive') {
+          await runGDriveSync(pathsToSync);
+        }
+      } catch (err) {
+        log(`Sync failed: ${err.message}`, 'error');
+      } finally {
+        btnStartSync.disabled = false;
+        syncStatusText.textContent = 'সিঙ্ক সমাপ্ত';
+        updateSyncButtonState();
+      }
+    });
+
+    // 1. Local copy logic
+    async function runLocalSync(files) {
+      log(`Starting local folder sync of ${files.length} files...`, 'info');
+      let successCount = 0;
+
+      for (const f of files) {
+        try {
+          const parts = f.path.split('/');
+          const fileName = parts.pop();
+          let currentDir = destDirHandle;
+
+          // Resolve parent subdirectories in destination
+          for (const subDir of parts) {
+            currentDir = await currentDir.getDirectoryHandle(subDir, { create: true });
+          }
+
+          // Read source file data
+          const fileData = await f.handle.getFile();
+          
+          // Write file data
+          const newFileHandle = await currentDir.getFileHandle(fileName, { create: true });
+          const writable = await newFileHandle.createWritable();
+          await writable.write(fileData);
+          await writable.close();
+
+          successCount++;
+          log(`[COPY] ${f.path} synced successfully.`, 'success');
+        } catch (e) {
+          log(`Failed to copy ${f.path}: ${e.message}`, 'error');
+        }
+      }
+      log(`Local sync complete: ${successCount}/${files.length} files synced.`, 'success');
+    }
+
+    // 2. GitHub sync logic
+    async function runGithubSync(files) {
+      const pat = document.getElementById('ghPat').value.trim();
+      const repo = document.getElementById('ghRepo').value.trim();
+      const branch = document.getElementById('ghBranch').value.trim() || 'main';
+      const commitMessage = document.getElementById('ghCommitMsg').value.trim() || `Auto-backup via Mizentia Web Engine at ${new Date().toLocaleString()}`;
+
+      if (!pat || !repo) {
+        log('GitHub PAT and Repository owner/repo are required fields.', 'error');
+        return;
+      }
+
+      log(`Initiating GitHub push to repository: "${repo}" on branch: "${branch}"...`, 'info');
+      let successCount = 0;
+
+      for (const f of files) {
+        try {
+          const file = await f.handle.getFile();
+          
+          // Read as binary buffer to compute hash and base64
+          const arrayBuffer = await file.arrayBuffer();
+          const uint8 = new Uint8Array(arrayBuffer);
+          
+          // Base64 encoding manually in browser
+          let binary = '';
+          const len = uint8.byteLength;
+          for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(uint8[i]);
+          }
+          const base64Content = window.btoa(binary);
+
+          const url = `https://api.github.com/repos/${repo}/contents/${f.path}?ref=${branch}`;
+          
+          // Check if file already exists to get SHA
+          let sha = null;
+          try {
+            const checkRes = await fetch(url, {
+              headers: { 'Authorization': `Bearer ${pat}` }
+            });
+            if (checkRes.ok) {
+              const fileInfo = await checkRes.json();
+              sha = fileInfo.sha;
+            }
+          } catch (err) {
+            // File does not exist yet, we will create it
+          }
+
+          // Upload/Update file contents using Github REST API
+          const payload = {
+            message: commitMessage,
+            content: base64Content,
+            branch: branch
+          };
+          if (sha) payload.sha = sha;
+
+          const uploadRes = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${pat}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          if (uploadRes.ok) {
+            successCount++;
+            log(`[GITHUB] ${f.path} uploaded successfully.`, 'success');
+          } else {
+            const errJson = await uploadRes.json();
+            throw new Error(errJson.message || 'HTTP error');
+          }
+
+        } catch (e) {
+          log(`Failed to push ${f.path} to GitHub: ${e.message}`, 'error');
+        }
+      }
+      log(`GitHub push complete: ${successCount}/${files.length} files committed.`, 'success');
+    }
+
+    // 3. Google Drive sync logic
+    async function runGDriveSync(files) {
+      const token = document.getElementById('gdToken').value.trim();
+      const parentFolderId = document.getElementById('gdFolderId').value.trim() || 'root';
+
+      if (!token) {
+        log('Google Access Token (AccessToken) is required for Google Drive backup.', 'error');
+        return;
+      }
+
+      log(`Uploading files to Google Drive under folder: "${parentFolderId}"...`, 'info');
+      let successCount = 0;
+
+      for (const f of files) {
+        try {
+          const fileData = await f.handle.getFile();
+          
+          // Metadata definition
+          const metadata = {
+            name: fileData.name,
+            parents: [parentFolderId]
+          };
+
+          // Multipart body construction
+          const form = new FormData();
+          form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+          form.append('file', fileData);
+
+          const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: form
+          });
+
+          if (uploadRes.ok) {
+            const resJson = await uploadRes.json();
+            successCount++;
+            log(`[GDRIVE] ${f.path} uploaded successfully (ID: ${resJson.id}).`, 'success');
+          } else {
+            const errJson = await uploadRes.json();
+            throw new Error(errJson.error?.message || 'HTTP error');
+          }
+
+        } catch (e) {
+          log(`Failed to upload ${f.path} to Google Drive: ${e.message}`, 'error');
+        }
+      }
+      log(`Google Drive sync complete: ${successCount}/${files.length} files uploaded.`, 'success');
+    }
+  </script>
+</body>
+</html>

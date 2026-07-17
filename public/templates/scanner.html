@@ -1,0 +1,69 @@
+<header class="content-header">
+  <div class="header-title">
+    <h2>প্রজেক্ট স্ক্যানার (Backup Scanner)</h2>
+    <p>আপনার রুট প্রজেক্ট স্ক্যান করুন এবং গুগল ড্রাইভে কি কি ব্যাকআপ করা হবে তা সিলেক্ট করুন।</p>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-secondary" id="btnScannerScan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      আবার স্ক্যান করুন
+    </button>
+  </div>
+</header>
+
+<!-- Scanning summary card -->
+<div class="glass-card summary-bar" id="scanSummaryBar" style="display: none;">
+  <div class="summary-item">
+    <span class="badge badge-add" id="summaryAddCount">0 Added</span>
+  </div>
+  <div class="summary-item">
+    <span class="badge badge-modify" id="summaryModifyCount">0 Modified</span>
+  </div>
+  <div class="summary-item">
+    <span class="badge badge-delete" id="summaryDeleteCount">0 Deleted</span>
+  </div>
+  <div class="summary-item">
+    <span class="badge badge-rename" id="summaryRenameCount">0 Renamed</span>
+  </div>
+  <div class="summary-item total-changes" id="summaryTotalText">
+    কোন পরিবর্তন নেই।
+  </div>
+</div>
+
+<!-- File tree wrapper -->
+<div class="glass-card tree-container">
+  <div class="tree-header">
+    <label class="checkbox-container">
+      <input type="checkbox" id="selectAllCheckbox">
+      <span class="checkbox-mark"></span>
+      <span class="checkbox-label">সকল পরিবর্তন সিলেক্ট করুন</span>
+    </label>
+    <div class="tree-filters">
+      <button class="filter-btn active" data-filter="all">সবগুলো</button>
+      <button class="filter-btn" data-filter="added">নতুন (Added)</button>
+      <button class="filter-btn" data-filter="modified">পরিবর্তিত (Modified)</button>
+      <button class="filter-btn" data-filter="deleted">বাতিল (Deleted)</button>
+    </div>
+  </div>
+
+  <!-- Tree body -->
+  <div class="tree-body" id="scanTreeBody">
+    <div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+      <h3>কোন স্ক্যান ডেটা নেই</h3>
+      <p>আপনার লোকাল প্রজেক্টে কি কি পরিবর্তন হয়েছে তা দেখতে উপরে স্ক্যান বাটনে ক্লিক করুন।</p>
+      <button class="btn btn-primary" id="btnScannerScanEmpty">স্ক্যান শুরু করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- Floating action footer -->
+<div class="scanner-footer" id="scannerFooter" style="display: none;">
+  <div class="selected-summary">
+    <span id="selectedCountText">0 items selected</span>
+  </div>
+  <button class="btn btn-primary btn-large" id="btnExecuteBackup">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.2 15c.1-.3.2-.6.2-.9V4.5A2.5 2.5 0 0 0 19 2H5a2.5 2.5 0 0 0-2.5 2.5V14c0 .3.1.6.2.9l3 6c.2.4.6.6 1.1.6h10.4c.5 0 .9-.2 1.1-.6l3-6z"/></svg>
+    ড্রাইভে ব্যাকআপ নিন (Confirm & Backup)
+  </button>
+</div>
