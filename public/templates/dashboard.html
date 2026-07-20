@@ -252,6 +252,30 @@
       </div>
     </div>
 
+    <!-- GitHub Pages Config Area -->
+    <div id="gitPagesConfigArea" style="background: rgba(255,255,255,0.01); padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--text-cyan);">
+          <input type="checkbox" id="gitEnablePages" style="accent-color: var(--text-cyan); width: 14px; height: 14px; cursor: pointer;">
+          🌐 গিটহাব পেজেস চালু করুন (Enable GitHub Pages)
+        </label>
+      </div>
+      <div id="gitPagesSettingsWrapper" style="display: none; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <label for="gitPublishDir" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">পাবলিশ ফোল্ডার (Publish Folder):</label>
+          <select id="gitPublishDir" class="form-control" style="width: 100%;">
+            <option value="public" selected>public (পাবলিক ফোল্ডার / Public Folder)</option>
+            <option value=".">. (প্রজেক্ট রুট / Project Root)</option>
+            <option value="dist">dist (বিল্ড ডিরেক্টরি / Dist Folder)</option>
+            <option value="build">build (বিল্ড ডিরেক্টরি / Build Folder)</option>
+          </select>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 3px;">
+            সিলেক্ট করা ফোল্ডারটি স্বয়ংক্রিয়ভাবে গিটহাব পেজেস-এ লাইভ ডেপ্লয় হবে।
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Optional Push Settings (Force Push) -->
     <div style="display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: -5px;">
       <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.8rem; color: #ef4444; font-weight: 500;">

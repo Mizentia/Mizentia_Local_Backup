@@ -44,6 +44,7 @@ BackupApp.utils.cacheElements = function() {
     'gitRepoConfigArea', 'gitRepoSelector', 'gitBranchSelector',
     'gitLocalPathDropdown', 'gitLocalPathInput',
     'gitPushModeArea', 'btnEditGitIgnore', 'gitIgnoreTextareaWrapper', 'gitIgnoreTextarea', 'btnSaveGitIgnore', 'gitForcePush',
+    'gitEnablePages', 'gitPublishDir', 'gitPagesSettingsWrapper',
     'loadingModal', 'modalHeading', 'modalSubtext', 'modalProgressBar',
     'modalProgressDetail', 'modalActions', 'btnModalClose', 'btnSaveConfig',
     'btnTestConnection', 'localWorkspaceRoot', 'driveFolderId', 'localDrivePath',

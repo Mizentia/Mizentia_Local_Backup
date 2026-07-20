@@ -347,7 +347,7 @@ router.post('/remote', async (req, res) => {
 
 // Commit and Push to GitHub using Token Auth
 router.post('/push', async (req, res) => {
-  const { commitMessage, accountId, repoFullName, branchName, pushMode, forcePush } = req.body;
+  const { commitMessage, accountId, repoFullName, branchName, pushMode, forcePush, enablePages, publishDir } = req.body;
   const cwd = getTargetGitCwd();
   const message = commitMessage || `Auto-update: ${new Date().toLocaleString()}`;
 
@@ -381,6 +381,12 @@ router.post('/push', async (req, res) => {
       }
     }
 
+    let targetBranch = branchName;
+    if (!targetBranch) {
+      const branchRes = await runGitCommand(['branch', '--show-current'], cwd);
+      targetBranch = branchRes.stdout || 'main';
+    }
+
     // Configure .gitignore based on selected pushMode
     const mode = pushMode || 'project';
     const gitignorePath = path.join(cwd, '.gitignore');
@@ -398,6 +404,51 @@ router.post('/push', async (req, res) => {
       }
       fs.writeFileSync(gitignorePath, storageRules, 'utf8');
       logs.push(`Applied System Storage Mode ignore rules (copied from .backupignore to .gitignore).`);
+    }
+
+    // Write GitHub Actions deploy workflow file if GitHub Pages option is checked
+    if (enablePages) {
+      const workflowDir = path.join(cwd, '.github', 'workflows');
+      if (!fs.existsSync(workflowDir)) {
+        fs.mkdirSync(workflowDir, { recursive: true });
+      }
+      const workflowPath = path.join(workflowDir, 'deploy.yml');
+      const workflowContent = `name: Deploy Static Content to Pages
+
+on:
+  push:
+    branches: ["${targetBranch}"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '${publishDir === '.' ? '.' : './' + publishDir}'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+`;
+      fs.writeFileSync(workflowPath, workflowContent, 'utf8');
+      logs.push(`Generated GitHub Actions Pages deployment workflow (Folder: ${publishDir === '.' ? 'Project Root' : publishDir}).`);
     }
 
     logs.push('> git add .');
@@ -421,12 +472,6 @@ router.post('/push', async (req, res) => {
       }
     } else {
       logs.push(commitRes.stdout);
-    }
-
-    let targetBranch = branchName;
-    if (!targetBranch) {
-      const branchRes = await runGitCommand(['branch', '--show-current'], cwd);
-      targetBranch = branchRes.stdout || 'main';
     }
 
     const currentBranchRes = await runGitCommand(['branch', '--show-current'], cwd);
@@ -457,6 +502,37 @@ router.post('/push', async (req, res) => {
     if (!pushRes.success) {
       logs.push(`Push failed with exit code: ${pushRes.code}`);
       return res.json({ success: false, logs });
+    }
+
+    // Call GitHub Pages REST API to configure Pages build type to custom workflow
+    if (enablePages && repoFullName && activeToken) {
+      logs.push(`Configuring GitHub Pages custom workflow for ${repoFullName}...`);
+      try {
+        let pagesConfigured = false;
+        try {
+          await githubApiRequest('GET', `/repos/${repoFullName}/pages`, activeToken);
+          pagesConfigured = true;
+        } catch (getErr) {
+          // If it fails with 404, pagesConfigured stays false
+        }
+
+        if (!pagesConfigured) {
+          logs.push(`Activating GitHub Pages site with build_type: "workflow"...`);
+          await githubApiRequest('POST', `/repos/${repoFullName}/pages`, activeToken, {
+            build_type: 'workflow'
+          });
+          logs.push(`GitHub Pages site initialized successfully!`);
+        } else {
+          logs.push(`Setting GitHub Pages build source to "workflow" (GitHub Actions)...`);
+          await githubApiRequest('PUT', `/repos/${repoFullName}/pages`, activeToken, {
+            build_type: 'workflow'
+          });
+          logs.push(`GitHub Pages configuration updated successfully!`);
+        }
+      } catch (apiErr) {
+        logs.push(`[WARNING] Failed to configure GitHub Pages via API: ${apiErr.message}`);
+        logs.push(`Please verify that your PAT has the 'workflow' scope ticked and Pages is enabled.`);
+      }
     }
 
     logs.push(`Push to GitHub completed successfully! (Target: ${repoFullName || 'origin'} / ${targetBranch})`);

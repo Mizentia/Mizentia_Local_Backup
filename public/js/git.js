@@ -385,6 +385,16 @@ BackupApp.git.init = function() {
   });
   BackupApp.git.updatePushModeUI();
 
+  // Wire up GitHub Pages enable checkbox
+  if (BackupApp.elements.gitEnablePages) {
+    BackupApp.elements.gitEnablePages.addEventListener('change', () => {
+      const isEnabled = BackupApp.elements.gitEnablePages.checked;
+      if (BackupApp.elements.gitPagesSettingsWrapper) {
+        BackupApp.elements.gitPagesSettingsWrapper.style.display = isEnabled ? 'flex' : 'none';
+      }
+    });
+  }
+
   // Wire up Edit GitIgnore button
   if (BackupApp.elements.btnEditGitIgnore) {
     BackupApp.elements.btnEditGitIgnore.addEventListener('click', () => {
@@ -571,12 +581,14 @@ BackupApp.git.init = function() {
 
       const pushMode = document.querySelector('input[name="gitPushMode"]:checked')?.value || 'project';
       const forcePush = BackupApp.elements.gitForcePush?.checked || false;
+      const enablePages = BackupApp.elements.gitEnablePages?.checked || false;
+      const publishDir = BackupApp.elements.gitPublishDir?.value || 'public';
 
       try {
         const response = await fetch('/api/github/push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ commitMessage, accountId, repoFullName, branchName, pushMode, forcePush })
+          body: JSON.stringify({ commitMessage, accountId, repoFullName, branchName, pushMode, forcePush, enablePages, publishDir })
         });
         const data = await response.json();
         
