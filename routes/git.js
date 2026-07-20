@@ -330,7 +330,7 @@ router.post('/remote', async (req, res) => {
 
 // Commit and Push to GitHub using Token Auth
 router.post('/push', async (req, res) => {
-  const { commitMessage, accountId, repoFullName, branchName, pushMode } = req.body;
+  const { commitMessage, accountId, repoFullName, branchName, pushMode, forcePush } = req.body;
   const cwd = BACKUP_SYSTEM_DIR;
   const message = commitMessage || `Auto-update: ${new Date().toLocaleString()}`;
 
@@ -412,8 +412,12 @@ router.post('/push', async (req, res) => {
     const currentBranchRes = await runGitCommand(['branch', '--show-current'], cwd);
     const currentLocalBranch = currentBranchRes.stdout || 'main';
 
-    logs.push(`> git push origin ${currentLocalBranch}:${targetBranch}`);
-    const pushRes = await runGitCommand(['push', 'origin', `${currentLocalBranch}:${targetBranch}`], cwd);
+    const pushArgs = forcePush ? 
+      ['push', '-f', 'origin', `${currentLocalBranch}:${targetBranch}`] : 
+      ['push', 'origin', `${currentLocalBranch}:${targetBranch}`];
+
+    logs.push(`> git push ${forcePush ? '-f ' : ''}origin ${currentLocalBranch}:${targetBranch}`);
+    const pushRes = await runGitCommand(pushArgs, cwd);
     
     if (pushRes.stdout) logs.push(pushRes.stdout);
     if (pushRes.stderr) {

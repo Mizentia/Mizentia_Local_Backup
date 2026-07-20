@@ -437,12 +437,13 @@ BackupApp.git.init = function() {
       BackupApp.utils.showLoadingModal('গিটহাবে কোড পুশ করা হচ্ছে...', 'আপনার পরিবর্তনসমূহ গিটহাবে আপলোড হচ্ছে, অপেক্ষা করুন।');
       
       const pushMode = document.querySelector('input[name="gitPushMode"]:checked')?.value || 'project';
+      const forcePush = BackupApp.elements.gitForcePush?.checked || false;
 
       try {
         const response = await fetch('/api/github/push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ commitMessage, accountId, repoFullName, branchName, pushMode })
+          body: JSON.stringify({ commitMessage, accountId, repoFullName, branchName, pushMode, forcePush })
         });
         const data = await response.json();
         
