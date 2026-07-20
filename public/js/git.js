@@ -55,7 +55,8 @@ BackupApp.git.checkStatus = async function() {
     if (BackupApp.elements.gitSetupArea) BackupApp.elements.gitSetupArea.style.display = 'none';
     if (BackupApp.elements.gitInitWrapper) BackupApp.elements.gitInitWrapper.style.display = 'none';
 
-    if (BackupApp.elements.gitTerminalBranch) BackupApp.elements.gitTerminalBranch.textContent = `Branch: ${data.branch}`;
+    BackupApp.git.currentLocalBranch = data.branch;
+    BackupApp.git.updateTerminalBranchHeader();
     BackupApp.git.appendLog(`Local repository is active on branch: ${data.branch}`, 'success');
     
     if (data.changes && data.changes.length > 0) {
@@ -193,6 +194,7 @@ BackupApp.git.onRepoChange = async function(accountId, repoFullName, restoreBran
       if (restoreBranch) {
         branchSelector.value = restoreBranch;
       }
+      BackupApp.git.updateTerminalBranchHeader();
     }
   } catch (e) {
     console.error('Error loading branches:', e);
@@ -260,6 +262,36 @@ BackupApp.git.updatePushModeUI = function() {
       ignoreArea.style.display = 'none';
     }
   }
+};
+
+BackupApp.git.updateTerminalBranchHeader = function(localBranch = '') {
+  const local = localBranch || BackupApp.git.currentLocalBranch || 'unknown';
+  const target = BackupApp.elements.gitBranchSelector?.value || 'none';
+  if (BackupApp.elements.gitTerminalBranch) {
+    BackupApp.elements.gitTerminalBranch.textContent = `Local: ${local} ➔ Target: ${target}`;
+  }
+};
+
+BackupApp.git.simulateProgress = function(steps, durationMs) {
+  let currentStep = 0;
+  const intervalTime = durationMs / steps.length;
+  
+  if (BackupApp.git.progressInterval) {
+    clearInterval(BackupApp.git.progressInterval);
+  }
+  
+  const runStep = () => {
+    if (currentStep < steps.length) {
+      const step = steps[currentStep];
+      BackupApp.utils.updateLoadingProgress(step.percent, step.text);
+      currentStep++;
+    } else {
+      clearInterval(BackupApp.git.progressInterval);
+    }
+  };
+  
+  runStep();
+  BackupApp.git.progressInterval = setInterval(runStep, intervalTime);
 };
 
 BackupApp.git.init = function() {
@@ -372,6 +404,7 @@ BackupApp.git.init = function() {
   if (BackupApp.elements.gitBranchSelector) {
     BackupApp.elements.gitBranchSelector.addEventListener('change', async () => {
       await BackupApp.git.saveCurrentSelection();
+      BackupApp.git.updateTerminalBranchHeader();
     });
   }
 
@@ -401,9 +434,20 @@ BackupApp.git.init = function() {
   if (BackupApp.elements.btnGitInit) {
     BackupApp.elements.btnGitInit.addEventListener('click', async () => {
       BackupApp.git.appendLog('Initializing Git repository...', 'info');
+      BackupApp.utils.showLoadingModal('গিট রিপোজিটরি ইনিশিয়েলাইজ করা হচ্ছে...', 'রিপোজিটরি কনফিগার করা হচ্ছে, অপেক্ষা করুন।');
+      const progressSteps = [
+        { percent: 20, text: 'রিপোজিটরি কনফিগারেশন চেক করা হচ্ছে...' },
+        { percent: 50, text: 'গিট রিপোজিটরি ইনিশিয়েলাইজ করা হচ্ছে (git init)...' },
+        { percent: 80, text: '.gitignore রুলস ফাইল তৈরি করা হচ্ছে...' }
+      ];
+      BackupApp.git.simulateProgress(progressSteps, 1500);
       try {
         const response = await fetch('/api/github/init', { method: 'POST' });
         const data = await response.json();
+        
+        if (BackupApp.git.progressInterval) clearInterval(BackupApp.git.progressInterval);
+        BackupApp.utils.hideLoadingModal();
+
         if (data.success) {
           BackupApp.git.appendLog(data.message, 'success');
           BackupApp.utils.showToast('গিট রিপোজিটরি সফলভাবে ইনিশিয়েলাইজ হয়েছে!', 'success');
@@ -412,6 +456,8 @@ BackupApp.git.init = function() {
           throw new Error(data.error);
         }
       } catch (e) {
+        if (BackupApp.git.progressInterval) clearInterval(BackupApp.git.progressInterval);
+        BackupApp.utils.hideLoadingModal();
         BackupApp.git.appendLog(`Git initialization failed: ${e.message}`, 'error');
         BackupApp.utils.showToast(`গিট ইনিশিয়েলাইজ ব্যর্থ হয়েছে: ${e.message}`, 'error');
       }
@@ -436,6 +482,15 @@ BackupApp.git.init = function() {
 
       BackupApp.utils.showLoadingModal('গিটহাবে কোড পুশ করা হচ্ছে...', 'আপনার পরিবর্তনসমূহ গিটহাবে আপলোড হচ্ছে, অপেক্ষা করুন।');
       
+      const progressSteps = [
+        { percent: 15, text: 'গিট কনফিগারেশন যাচাই করা হচ্ছে...' },
+        { percent: 35, text: 'ফাইলগুলো ইনডেক্স করা হচ্ছে (git add)...' },
+        { percent: 55, text: 'পরিবর্তনসমূহ কমিট করা হচ্ছে (git commit)...' },
+        { percent: 75, text: 'গিটহাবে রিমোট আপলোড করা হচ্ছে (git push)...' },
+        { percent: 90, text: 'গিটহাব থেকে রেসপন্স যাচাই করা হচ্ছে...' }
+      ];
+      BackupApp.git.simulateProgress(progressSteps, 5000);
+
       const pushMode = document.querySelector('input[name="gitPushMode"]:checked')?.value || 'project';
       const forcePush = BackupApp.elements.gitForcePush?.checked || false;
 
@@ -447,6 +502,7 @@ BackupApp.git.init = function() {
         });
         const data = await response.json();
         
+        if (BackupApp.git.progressInterval) clearInterval(BackupApp.git.progressInterval);
         BackupApp.utils.hideLoadingModal();
         
         if (data.logs) {
@@ -468,6 +524,7 @@ BackupApp.git.init = function() {
           BackupApp.utils.showToast('গিটহাব পুশ ব্যর্থ হয়েছে। লগ উইন্ডো চেক করুন।', 'error');
         }
       } catch (e) {
+        if (BackupApp.git.progressInterval) clearInterval(BackupApp.git.progressInterval);
         BackupApp.utils.hideLoadingModal();
         BackupApp.git.appendLog(`Git push action failed: ${e.message}`, 'error');
         BackupApp.utils.showToast(`গিটহাব পুশ একশন ব্যর্থ: ${e.message}`, 'error');
