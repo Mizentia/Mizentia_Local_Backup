@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
 const https = require('https');
-const { BACKUP_SYSTEM_DIR, loadConfig, saveConfig } = require('../lib/config');
+const { BACKUP_SYSTEM_DIR, loadConfig, saveConfig, getIgnoreFilePath } = require('../lib/config');
 
 function runGitCommand(args, cwd) {
   return new Promise((resolve) => {
@@ -330,7 +330,7 @@ router.post('/remote', async (req, res) => {
 
 // Commit and Push to GitHub using Token Auth
 router.post('/push', async (req, res) => {
-  const { commitMessage, accountId, repoFullName, branchName } = req.body;
+  const { commitMessage, accountId, repoFullName, branchName, pushMode } = req.body;
   const cwd = BACKUP_SYSTEM_DIR;
   const message = commitMessage || `Auto-update: ${new Date().toLocaleString()}`;
 
@@ -359,6 +359,25 @@ router.post('/push', async (req, res) => {
       } else {
         await runGitCommand(['remote', 'add', 'origin', repoUrl], cwd);
       }
+    }
+
+    // Configure .gitignore based on selected pushMode
+    const mode = pushMode || 'project';
+    const gitignorePath = path.join(cwd, '.gitignore');
+    if (mode === 'project') {
+      const gitIgnoreRules = config.githubIgnoreRules || '';
+      fs.writeFileSync(gitignorePath, gitIgnoreRules, 'utf8');
+      logs.push(`Applied GitHub Project Mode ignore rules (.gitignore).`);
+    } else {
+      const backupIgnorePath = getIgnoreFilePath();
+      let storageRules = '';
+      if (fs.existsSync(backupIgnorePath)) {
+        storageRules = fs.readFileSync(backupIgnorePath, 'utf8');
+      } else {
+        storageRules = 'node_modules/\nconfig.json\nstate.json\n.tmp.driveupload/\n.tmp.drivedownload/\nThumbs.db\n.DS_Store';
+      }
+      fs.writeFileSync(gitignorePath, storageRules, 'utf8');
+      logs.push(`Applied System Storage Mode ignore rules (copied from .backupignore to .gitignore).`);
     }
 
     logs.push('> git add .');
@@ -422,6 +441,30 @@ router.post('/push', async (req, res) => {
 
   } catch (e) {
     console.error('Git push error:', e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Get GitHub gitignore rules
+router.get('/gitignore', (req, res) => {
+  try {
+    const config = loadConfig();
+    const rules = config.githubIgnoreRules || '';
+    res.json({ success: true, rules });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Save GitHub gitignore rules
+router.post('/gitignore', (req, res) => {
+  const { rules } = req.body;
+  try {
+    const config = loadConfig();
+    config.githubIgnoreRules = rules;
+    saveConfig(config);
+    res.json({ success: true });
+  } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
 });

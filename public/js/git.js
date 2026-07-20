@@ -216,8 +216,85 @@ BackupApp.git.saveCurrentSelection = async function() {
   }
 };
 
+BackupApp.git.loadGitIgnoreRules = async function() {
+  try {
+    const response = await fetch('/api/github/gitignore');
+    const data = await response.json();
+    if (data.success && BackupApp.elements.gitIgnoreTextarea) {
+      BackupApp.elements.gitIgnoreTextarea.value = data.rules || '';
+    }
+  } catch (e) {
+    console.error('Error loading gitignore rules:', e);
+  }
+};
+
+BackupApp.git.saveGitIgnoreRules = async function() {
+  const rules = BackupApp.elements.gitIgnoreTextarea?.value || '';
+  try {
+    const response = await fetch('/api/github/gitignore', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rules })
+    });
+    const data = await response.json();
+    if (data.success) {
+      BackupApp.utils.showToast('গিটহাব ইগনোর রুলস সংরক্ষণ করা হয়েছে!', 'success');
+      if (BackupApp.elements.gitIgnoreTextareaWrapper) {
+        BackupApp.elements.gitIgnoreTextareaWrapper.style.display = 'none';
+      }
+    } else {
+      throw new Error(data.error);
+    }
+  } catch (e) {
+    BackupApp.utils.showToast(`রুলস সংরক্ষণ ব্যর্থ হয়েছে: ${e.message}`, 'error');
+  }
+};
+
+BackupApp.git.updatePushModeUI = function() {
+  const selectedMode = document.querySelector('input[name="gitPushMode"]:checked')?.value || 'project';
+  const ignoreArea = BackupApp.elements.gitIgnoreSettingsArea;
+  if (ignoreArea) {
+    if (selectedMode === 'project') {
+      ignoreArea.style.display = 'block';
+    } else {
+      ignoreArea.style.display = 'none';
+    }
+  }
+};
+
 BackupApp.git.init = function() {
   BackupApp.git.loadAccounts();
+  BackupApp.git.loadGitIgnoreRules();
+
+  // Wire up push mode toggles
+  const modeRadios = document.querySelectorAll('input[name="gitPushMode"]');
+  modeRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      BackupApp.git.updatePushModeUI();
+    });
+  });
+  BackupApp.git.updatePushModeUI();
+
+  // Wire up Edit GitIgnore button
+  if (BackupApp.elements.btnEditGitIgnore) {
+    BackupApp.elements.btnEditGitIgnore.addEventListener('click', () => {
+      const wrapper = BackupApp.elements.gitIgnoreTextareaWrapper;
+      if (wrapper) {
+        if (wrapper.style.display === 'none' || !wrapper.style.display) {
+          wrapper.style.display = 'flex';
+        } else {
+          wrapper.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  // Wire up Save GitIgnore button
+  if (BackupApp.elements.btnSaveGitIgnore) {
+    BackupApp.elements.btnSaveGitIgnore.addEventListener('click', () => {
+      BackupApp.git.saveGitIgnoreRules();
+    });
+  }
 
   if (BackupApp.elements.btnOpenAddAccountModal) {
     BackupApp.elements.btnOpenAddAccountModal.addEventListener('click', () => {
@@ -359,11 +436,13 @@ BackupApp.git.init = function() {
 
       BackupApp.utils.showLoadingModal('গিটহাবে কোড পুশ করা হচ্ছে...', 'আপনার পরিবর্তনসমূহ গিটহাবে আপলোড হচ্ছে, অপেক্ষা করুন।');
       
+      const pushMode = document.querySelector('input[name="gitPushMode"]:checked')?.value || 'project';
+
       try {
         const response = await fetch('/api/github/push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ commitMessage, accountId, repoFullName, branchName })
+          body: JSON.stringify({ commitMessage, accountId, repoFullName, branchName, pushMode })
         });
         const data = await response.json();
         

@@ -198,6 +198,33 @@
       </div>
     </div>
 
+    <!-- Push Mode Selection & Ignore Rules Editor -->
+    <div id="gitPushModeArea" style="background: rgba(255,255,255,0.01); padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;">
+      <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">পুশ মোড সিলেক্ট করুন (Push Mode):</span>
+      <div style="display: flex; gap: 20px;">
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem;">
+          <input type="radio" name="gitPushMode" value="project" checked style="accent-color: var(--text-cyan);">
+          💻 প্রজেক্ট মোড (Project Mode)
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 0.85rem;">
+          <input type="radio" name="gitPushMode" value="storage" style="accent-color: var(--text-cyan);">
+          📦 স্টোরেজ মোড (Storage Mode)
+        </label>
+      </div>
+      
+      <!-- Project Mode Ignore Rules Edit Area -->
+      <div id="gitIgnoreSettingsArea" style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <span style="font-size: 0.75rem; color: var(--text-muted);">গিটহাব ইগনোর রুলস (.gitignore):</span>
+          <button id="btnEditGitIgnore" style="background: none; border: none; color: var(--text-cyan); font-size: 0.75rem; cursor: pointer; font-weight: bold; padding: 2px;">সম্পাদনা করুন (Edit)</button>
+        </div>
+        <div id="gitIgnoreTextareaWrapper" style="display: none; flex-direction: column; gap: 8px;">
+          <textarea id="gitIgnoreTextarea" class="form-control code-font" rows="5" style="width: 100%; font-size: 0.8rem; background: rgba(0,0,0,0.3);" placeholder="গিটহাবে পুশ করার সময় যে ফাইলগুলো ইগনোর করতে চান..."></textarea>
+          <button id="btnSaveGitIgnore" class="btn btn-secondary" style="align-self: flex-end; padding: 4px 10px; font-size: 0.75rem;">রুলস সংরক্ষণ করুন</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Actions Area -->
     <div id="gitActionsArea" style="display: flex; gap: 12px; align-items: center;">
       <input type="text" id="gitCommitMessage" placeholder="একটি ছোট কমিট মেসেজ লিখুন (যেমন: ফোল্ডার সিঙ্ক ফিক্স...)" class="form-control" style="flex-grow: 1; height: 36px; box-sizing: border-box;">
