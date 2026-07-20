@@ -182,6 +182,22 @@
       </div>
     </div>
 
+    <!-- Local Project Path Config -->
+    <div style="background: rgba(255,255,255,0.01); padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;">
+      <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 15px;">
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <label for="gitLocalPathDropdown" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">ওয়ার্কস্পেস প্রজেক্ট নির্বাচন (Select Subproject):</label>
+          <select id="gitLocalPathDropdown" class="form-control" style="width: 100%;">
+            <option value="">-- প্রজেক্ট সিলেক্ট করুন --</option>
+          </select>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+          <label for="gitLocalPathInput" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">লোকাল প্রজেক্ট পাথ (Local Project Path):</label>
+          <input type="text" id="gitLocalPathInput" class="form-control" style="width: 100%; height: 36px; box-sizing: border-box;" placeholder="অথবা কম্পিউটারের যেকোনো প্রজেক্ট পাথ টাইপ করুন...">
+        </div>
+      </div>
+    </div>
+
     <!-- Repository & Branch selector row (hidden until account is loaded) -->
     <div id="gitRepoConfigArea" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: rgba(255,255,255,0.01); padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color);">
       <div style="display: flex; flex-direction: column; gap: 5px;">

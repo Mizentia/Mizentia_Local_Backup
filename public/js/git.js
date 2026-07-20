@@ -35,6 +35,15 @@ BackupApp.git.checkStatus = async function() {
     const response = await fetch('/api/github/status');
     const data = await response.json();
     
+    if (data.selectedLocalPath && BackupApp.elements.gitLocalPathInput) {
+      BackupApp.elements.gitLocalPathInput.value = data.selectedLocalPath;
+      if (BackupApp.elements.gitLocalPathDropdown) {
+        BackupApp.elements.gitLocalPathDropdown.value = data.selectedLocalPath;
+      }
+    } else if (data.localPath && BackupApp.elements.gitLocalPathInput) {
+      BackupApp.elements.gitLocalPathInput.value = data.localPath;
+    }
+
     if (!data.success) {
       if (data.reason === 'git_not_installed') {
         BackupApp.git.appendLog(data.message, 'error');
@@ -294,9 +303,78 @@ BackupApp.git.simulateProgress = function(steps, durationMs) {
   BackupApp.git.progressInterval = setInterval(runStep, intervalTime);
 };
 
+BackupApp.git.loadWorkspaceSubfolders = async function() {
+  try {
+    const dropdown = BackupApp.elements.gitLocalPathDropdown;
+    if (dropdown) {
+      dropdown.innerHTML = '<option value="">-- প্রজেক্ট সিলেক্ট করুন --</option>';
+    }
+
+    const response = await fetch('/api/workspace/subfolders');
+    const data = await response.json();
+    if (data.success && dropdown) {
+      data.folders.forEach(folder => {
+        const opt = document.createElement('option');
+        opt.value = folder.absolutePath;
+        opt.textContent = folder.name;
+        dropdown.appendChild(opt);
+      });
+      const activePath = BackupApp.elements.gitLocalPathInput?.value || '';
+      if (activePath) {
+        dropdown.value = activePath;
+      }
+    }
+  } catch (e) {
+    console.error('Error loading workspace subfolders:', e);
+  }
+};
+
+BackupApp.git.saveLocalPath = async function(localPath) {
+  try {
+    const response = await fetch('/api/github/localpath', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ localPath })
+    });
+    const data = await response.json();
+    if (data.success) {
+      BackupApp.utils.showToast('লোকাল প্রজেক্ট পাথ আপডেট করা হয়েছে!', 'success');
+      BackupApp.git.checkStatus();
+    }
+  } catch (e) {
+    console.error('Error saving local project path config:', e);
+    BackupApp.utils.showToast('পাথ সেভ করতে সমস্যা হয়েছে।', 'error');
+  }
+};
+
 BackupApp.git.init = function() {
   BackupApp.git.loadAccounts();
   BackupApp.git.loadGitIgnoreRules();
+  BackupApp.git.loadWorkspaceSubfolders();
+
+  // Wire up local project path selectors
+  if (BackupApp.elements.gitLocalPathDropdown) {
+    BackupApp.elements.gitLocalPathDropdown.addEventListener('change', () => {
+      const val = BackupApp.elements.gitLocalPathDropdown.value;
+      if (val && BackupApp.elements.gitLocalPathInput) {
+        BackupApp.elements.gitLocalPathInput.value = val;
+        BackupApp.git.saveLocalPath(val);
+      }
+    });
+  }
+
+  if (BackupApp.elements.gitLocalPathInput) {
+    let debounceTimer;
+    BackupApp.elements.gitLocalPathInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const val = BackupApp.elements.gitLocalPathInput.value.trim();
+        if (val) {
+          BackupApp.git.saveLocalPath(val);
+        }
+      }, 800);
+    });
+  }
 
   // Wire up push mode toggles
   const modeRadios = document.querySelectorAll('input[name="gitPushMode"]');

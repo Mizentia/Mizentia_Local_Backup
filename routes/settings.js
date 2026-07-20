@@ -120,6 +120,44 @@ router.get('/workspace/list', async (req, res) => {
   }
 });
 
+// Get list of direct subdirectories in the workspace root (up to 2 levels deep)
+router.get('/workspace/subfolders', async (req, res) => {
+  try {
+    const root = getWorkspaceRoot();
+    if (!fs.existsSync(root)) {
+      return res.json({ success: true, folders: [] });
+    }
+    const folders = [];
+    
+    async function scanDir(dirPath, depth = 1) {
+      if (depth > 2) return;
+      try {
+        const list = await fs.promises.readdir(dirPath, { withFileTypes: true });
+        for (const item of list) {
+          if (item.isDirectory() && !item.name.startsWith('.') && item.name !== 'node_modules') {
+            const full = path.join(dirPath, item.name);
+            const rel = path.relative(root, full).replace(/\\/g, '/');
+            folders.push({
+              name: rel,
+              absolutePath: full
+            });
+            await scanDir(full, depth + 1);
+          }
+        }
+      } catch (err) {
+        // Skip directories we cannot read
+      }
+    }
+    
+    await scanDir(root);
+    folders.sort((a, b) => a.name.localeCompare(b.name));
+    
+    res.json({ success: true, folders });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 // Get Ignore Rules
 router.get('/ignore', (req, res) => {
   const ignorePath = getIgnoreFilePath();

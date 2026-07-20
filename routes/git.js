@@ -24,6 +24,17 @@ function runGitCommand(args, cwd) {
   });
 }
 
+function getTargetGitCwd() {
+  const config = loadConfig();
+  if (config.selectedGithubLocalPath) {
+    const resolvedPath = path.resolve(config.selectedGithubLocalPath);
+    if (fs.existsSync(resolvedPath) && fs.statSync(resolvedPath).isDirectory()) {
+      return resolvedPath;
+    }
+  }
+  return BACKUP_SYSTEM_DIR;
+}
+
 function githubApiRequest(method, path, token, body = null) {
   return new Promise((resolve, reject) => {
     const options = {
@@ -224,8 +235,9 @@ router.get('/branches', async (req, res) => {
 
 // Git Status Check
 router.get('/status', async (req, res) => {
-  const cwd = BACKUP_SYSTEM_DIR;
+  const cwd = getTargetGitCwd();
   try {
+    const config = loadConfig();
     const gitInstalled = await runGitCommand(['--version'], cwd);
     if (!gitInstalled.success) {
       return res.json({
@@ -240,7 +252,9 @@ router.get('/status', async (req, res) => {
       return res.json({
         success: true,
         isRepo: false,
-        message: 'এই ফোল্ডারে গিট রিপোজিটরি ইনিশিয়েলাইজ করা নেই।'
+        message: 'এই ফোল্ডারে গিট রিপোজিটরি ইনিশিয়েলাইজ করা নেই।',
+        localPath: cwd,
+        selectedLocalPath: config.selectedGithubLocalPath || ''
       });
     }
 
@@ -263,6 +277,8 @@ router.get('/status', async (req, res) => {
       branch: branchName,
       remoteUrl,
       changes,
+      localPath: cwd,
+      selectedLocalPath: config.selectedGithubLocalPath || '',
       message: 'গিট রিপোজিটরি সচল আছে।'
     });
   } catch (e) {
@@ -272,7 +288,7 @@ router.get('/status', async (req, res) => {
 
 // Initialize Git Repository
 router.post('/init', async (req, res) => {
-  const cwd = BACKUP_SYSTEM_DIR;
+  const cwd = getTargetGitCwd();
   try {
     const gitignorePath = path.join(cwd, '.gitignore');
     if (!fs.existsSync(gitignorePath)) {
@@ -304,7 +320,7 @@ router.post('/init', async (req, res) => {
 // Set GitHub Remote URL
 router.post('/remote', async (req, res) => {
   const { remoteUrl } = req.body;
-  const cwd = BACKUP_SYSTEM_DIR;
+  const cwd = getTargetGitCwd();
   if (!remoteUrl) {
     return res.status(400).json({ success: false, error: 'Remote URL is required' });
   }
@@ -331,7 +347,7 @@ router.post('/remote', async (req, res) => {
 // Commit and Push to GitHub using Token Auth
 router.post('/push', async (req, res) => {
   const { commitMessage, accountId, repoFullName, branchName, pushMode, forcePush } = req.body;
-  const cwd = BACKUP_SYSTEM_DIR;
+  const cwd = getTargetGitCwd();
   const message = commitMessage || `Auto-update: ${new Date().toLocaleString()}`;
 
   try {
@@ -468,6 +484,19 @@ router.post('/gitignore', (req, res) => {
     config.githubIgnoreRules = rules;
     saveConfig(config);
     res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Save selected local project path
+router.post('/localpath', (req, res) => {
+  const { localPath } = req.body;
+  try {
+    const config = loadConfig();
+    config.selectedGithubLocalPath = localPath || '';
+    saveConfig(config);
+    res.json({ success: true, localPath: config.selectedGithubLocalPath });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

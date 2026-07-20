@@ -41,6 +41,7 @@ BackupApp.utils.cacheElements = function() {
     'githubAccountModal', 'gitAccountLabel', 'gitAccountToken', 'btnCancelGitAccountModal', 'btnConfirmGitAccount',
     'gitAccountSelector', 'btnOpenAddAccountModal', 'gitActiveAccountCard', 'gitAccountAvatar', 'gitAccountUsername', 'btnDeleteGitAccount',
     'gitRepoConfigArea', 'gitRepoSelector', 'gitBranchSelector',
+    'gitLocalPathDropdown', 'gitLocalPathInput',
     'gitPushModeArea', 'btnEditGitIgnore', 'gitIgnoreTextareaWrapper', 'gitIgnoreTextarea', 'btnSaveGitIgnore', 'gitForcePush',
     'loadingModal', 'modalHeading', 'modalSubtext', 'modalProgressBar',
     'modalProgressDetail', 'modalActions', 'btnModalClose', 'btnSaveConfig',
