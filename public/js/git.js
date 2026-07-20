@@ -596,7 +596,12 @@ BackupApp.git.init = function() {
         BackupApp.utils.hideLoadingModal();
         
         if (data.logs) {
+          let hasWorkflowScopeError = false;
           data.logs.forEach(log => {
+            if (log.includes('refusing to allow a Personal Access Token to create or update workflow')) {
+              hasWorkflowScopeError = true;
+            }
+            
             if (log.toLowerCase().includes('failed') || log.toLowerCase().includes('error')) {
               BackupApp.git.appendLog(log, 'error');
             } else if (log.toLowerCase().includes('successfully') || log.toLowerCase().includes('succeeded')) {
@@ -605,6 +610,16 @@ BackupApp.git.init = function() {
               BackupApp.git.appendLog(log);
             }
           });
+
+          if (hasWorkflowScopeError) {
+            BackupApp.git.appendLog('----------------------------------------------------------------------', 'error');
+            BackupApp.git.appendLog('⚠️ ত্রুটি (ERROR): গিটহাব পুশ ব্যর্থ হয়েছে কারণ আপনার PAT টোকেনটিতে "workflow" পারমিশন নেই!', 'error');
+            BackupApp.git.appendLog('💡 সমাধান (SOLUTION):', 'info');
+            BackupApp.git.appendLog('১. গিটহাবে গিয়ে Settings > Developer settings > Personal access tokens (classic) এ যান।', 'info');
+            BackupApp.git.appendLog('২. এই টোকেনটি এডিট করে "workflow" স্কোপটি টিক দিয়ে সেভ (Generate/Update) করুন।', 'info');
+            BackupApp.git.appendLog('৩. অথবা নতুন একটি টোকেন তৈরি করার সময় অবশ্যই "repo" এবং "workflow" দুটি স্কোপই সিলেক্ট করুন।', 'info');
+            BackupApp.git.appendLog('----------------------------------------------------------------------', 'error');
+          }
         }
         
         if (data.success) {
@@ -681,6 +696,18 @@ BackupApp.git.init = function() {
         navigator.clipboard.writeText(token)
           .then(() => BackupApp.utils.showToast('টোকেন ক্লিপবোর্ডে কপি করা হয়েছে!', 'success'))
           .catch(err => BackupApp.utils.showToast('টোকেন কপি করতে ব্যর্থ হয়েছে।', 'error'));
+      }
+    });
+  }
+
+  // Wire up Copy Git Console Logs button
+  if (BackupApp.elements.btnCopyGitConsole) {
+    BackupApp.elements.btnCopyGitConsole.addEventListener('click', () => {
+      if (BackupApp.elements.gitConsoleLogs) {
+        const text = BackupApp.elements.gitConsoleLogs.innerText;
+        navigator.clipboard.writeText(text)
+          .then(() => BackupApp.utils.showToast('টার্মিনাল লগ কপি করা হয়েছে!', 'success'))
+          .catch(err => BackupApp.utils.showToast('লগ কপি করতে ব্যর্থ হয়েছে।', 'error'));
       }
     });
   }

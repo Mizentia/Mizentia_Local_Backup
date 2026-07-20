@@ -310,7 +310,13 @@
     <div class="console-container" id="gitConsoleWrapper" style="height: 180px; margin-top: 0; background: rgba(0,0,0,0.5); display: flex; flex-direction: column; border-radius: 8px; border: 1px solid var(--border-color);">
       <div class="console-header" style="border-bottom: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.02);">
         <span class="console-title" style="font-family: monospace; font-size: 0.8rem; color: var(--text-muted); font-weight: bold;">Git Command Terminal Output</span>
-        <span style="font-family: monospace; font-size: 0.75rem; color: var(--text-cyan);" id="gitTerminalBranch">Branch: unknown</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button id="btnCopyGitConsole" style="background: none; border: none; color: var(--text-cyan); font-family: monospace; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; background: rgba(102,252,241,0.05); border: 1px solid rgba(102,252,241,0.15);" title="লগ কপি করুন">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 11px; height: 11px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            কপি লগ (Copy Log)
+          </button>
+          <span style="font-family: monospace; font-size: 0.75rem; color: var(--text-cyan);" id="gitTerminalBranch">Branch: unknown</span>
+        </div>
       </div>
       <div class="console-body" id="gitConsoleLogs" style="font-family: monospace; font-size: 0.8rem; overflow-y: auto; flex-grow: 1; padding: 12px; display: flex; flex-direction: column; gap: 4px; color: #10b981; line-height: 1.4;">
         <div class="log-line" style="color: var(--text-muted);">[SYSTEM] Git automation initialized. Checking repository status...</div>
