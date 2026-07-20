@@ -27,8 +27,12 @@ BackupApp.scanner.buildHierarchy = function(changes) {
           path: currentPath,
           type: isFile ? 'file' : 'folder',
           children: isFile ? null : {},
-          item: (i === parts.length - 1) ? item : null
+          item: null
         };
+      }
+      if (i === parts.length - 1) {
+        current.children[part].item = item;
+        current.children[part].type = item.type || 'file';
       }
       current = current.children[part];
     }
@@ -226,14 +230,34 @@ BackupApp.scanner.updateParentCheckboxState = function(nodeEl) {
 
 BackupApp.scanner.updateSelectedCounter = function() {
   let fileCount = 0;
+  let folderCount = 0;
   BackupApp.state.selectedItems.forEach(path => {
-    const isFile = BackupApp.state.scanResults.changes.added.some(f => f.relativePath === path) ||
-                   BackupApp.state.scanResults.changes.modified.some(f => f.relativePath === path) ||
-                   BackupApp.state.scanResults.changes.deleted.some(f => f.relativePath === path) ||
-                   BackupApp.state.scanResults.changes.renamed.some(f => f.newPath === path);
-    if (isFile) fileCount++;
+    const addedItem = BackupApp.state.scanResults.changes.added.find(f => f.relativePath === path);
+    const modifiedItem = BackupApp.state.scanResults.changes.modified.find(f => f.relativePath === path);
+    const deletedItem = BackupApp.state.scanResults.changes.deleted.find(f => f.relativePath === path);
+    const renamedItem = BackupApp.state.scanResults.changes.renamed.find(f => f.newPath === path || f.relativePath === path);
+    
+    const item = addedItem || modifiedItem || deletedItem || renamedItem;
+    if (item) {
+      if (item.type === 'folder') {
+        folderCount++;
+      } else {
+        fileCount++;
+      }
+    }
   });
 
-  BackupApp.elements.selectedCountText.textContent = `${fileCount} টি ফাইল সিলেক্ট করা হয়েছে`;
-  BackupApp.elements.btnExecuteBackup.disabled = (fileCount === 0);
+  let text = '';
+  if (fileCount > 0 && folderCount > 0) {
+    text = `${fileCount} টি ফাইল এবং ${folderCount} টি ফোল্ডার সিলেক্ট করা হয়েছে`;
+  } else if (fileCount > 0) {
+    text = `${fileCount} টি ফাইল সিলেক্ট করা হয়েছে`;
+  } else if (folderCount > 0) {
+    text = `${folderCount} টি ফোল্ডার সিলেক্ট করা হয়েছে`;
+  } else {
+    text = `0 টি আইটেম সিলেক্ট করা হয়েছে`;
+  }
+
+  BackupApp.elements.selectedCountText.textContent = text;
+  BackupApp.elements.btnExecuteBackup.disabled = (fileCount === 0 && folderCount === 0);
 };

@@ -320,7 +320,16 @@ BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false, i
       } 
       
       else if (data.type === 'error') {
-        throw new Error(data.error);
+        if (activeScanEventSource) {
+          activeScanEventSource.close();
+          activeScanEventSource = null;
+        }
+        BackupApp.utils.hideLoadingModal();
+        if (BackupApp.elements.miniScanWidget) BackupApp.elements.miniScanWidget.style.display = 'none';
+        if (BackupApp.elements.btnModalMinimize) BackupApp.elements.btnModalMinimize.style.display = 'none';
+        if (logoIcon) logoIcon.classList.remove('sync-icon-anim');
+        BackupApp.utils.logToConsole(`Scan failed: ${data.error}`, 'error');
+        BackupApp.utils.showToast('স্ক্যান ব্যর্থ হয়েছে!', 'error');
       }
     };
 
@@ -330,7 +339,12 @@ BackupApp.scanner.scan = async function(silent = false, useMiniWidget = false, i
         activeScanEventSource = null;
       }
       if (!BackupApp.state.scanResults) {
-        throw new Error('সার্ভার কানেকশন বিচ্ছিন্ন হয়েছে বা স্ক্যানিং প্রক্রিয়া বাধাগ্রস্ত হয়েছে।');
+        BackupApp.utils.hideLoadingModal();
+        if (BackupApp.elements.miniScanWidget) BackupApp.elements.miniScanWidget.style.display = 'none';
+        if (BackupApp.elements.btnModalMinimize) BackupApp.elements.btnModalMinimize.style.display = 'none';
+        if (logoIcon) logoIcon.classList.remove('sync-icon-anim');
+        BackupApp.utils.logToConsole('সার্ভার কানেকশন বিচ্ছিন্ন হয়েছে বা স্ক্যানিং প্রক্রিয়া বাধাগ্রস্ত হয়েছে।', 'error');
+        BackupApp.utils.showToast('স্ক্যান ব্যর্থ হয়েছে!', 'error');
       }
     };
 

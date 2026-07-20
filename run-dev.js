@@ -52,6 +52,11 @@ serverProcess.on('close', (code) => {
 // Auto-open browser with resolved local network IP address
 if (process.platform === 'win32') {
   setTimeout(() => {
+    console.log('\n========================================================================');
+    console.log(' [WARNING] Google Drive OAuth requires matching Redirect URIs.');
+    console.log(' If you plan to authenticate using Google OAuth, please make sure');
+    console.log(' to access the dashboard via: http://localhost:3000');
+    console.log('========================================================================\n');
     exec(`start http://${localIP}:3000`);
   }, 1200);
 }

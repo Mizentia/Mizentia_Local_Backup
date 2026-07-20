@@ -42,6 +42,53 @@ router.post('/', async (req, res) => {
               delete state.folders[relPath];
             }
             results.success.push({ path: relPath, type });
+          } else if (type === 'rename') {
+            const driveFileId = item.driveFileId || state.folders[oldPath];
+            if (!driveFileId) {
+              throw new Error(`No backup record ID found for renaming folder from ${oldPath}`);
+            }
+
+            const driveResult = await driveManager.renameOrMoveFile(drive, oldPath, newPath, driveFileId, config, state);
+
+            state.folders = state.folders || {};
+            if (state.folders[oldPath]) {
+              delete state.folders[oldPath];
+            }
+            state.folders[newPath] = driveResult.id;
+
+            // Update all nested files in state.files
+            const oldPrefix = oldPath.endsWith('/') ? oldPath : oldPath + '/';
+            const newPrefix = newPath.endsWith('/') ? newPath : newPath + '/';
+            if (state.files) {
+              for (const filePath in state.files) {
+                if (filePath.startsWith(oldPrefix)) {
+                  const newFilePath = newPrefix + filePath.slice(oldPrefix.length);
+                  state.files[newFilePath] = {
+                    ...state.files[filePath]
+                  };
+                  if (config.connectionType === 'local_drive') {
+                    state.files[newFilePath].driveFileId = state.files[newFilePath].driveFileId.replace(oldPath, newPath);
+                    state.files[newFilePath].driveParentId = state.files[newFilePath].driveParentId.replace(oldPath, newPath);
+                  }
+                  delete state.files[filePath];
+                }
+              }
+            }
+            // Update all nested folders in state.folders
+            if (state.folders) {
+              for (const folderPath in state.folders) {
+                if (folderPath.startsWith(oldPrefix) && folderPath !== oldPath) {
+                  const newFolderPath = newPrefix + folderPath.slice(oldPrefix.length);
+                  state.folders[newFolderPath] = state.folders[folderPath];
+                  if (config.connectionType === 'local_drive') {
+                    state.folders[newFolderPath] = state.folders[newFolderPath].replace(oldPath, newPath);
+                  }
+                  delete state.folders[folderPath];
+                }
+              }
+            }
+
+            results.success.push({ oldPath, newPath, type });
           }
         } else {
           if (type === 'add' || type === 'modify') {

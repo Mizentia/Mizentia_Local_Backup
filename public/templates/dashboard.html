@@ -146,15 +146,70 @@
 
 <!-- GitHub Push Automation Card -->
 <div class="glass-card settings-card" style="margin-top: 20px;">
-  <h3 style="display: flex; align-items: center; gap: 8px;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: var(--text-cyan);"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-    🚀 গিটহাব পুশ অটোমেশন (GitHub Push Automation)
+  <h3 style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px;">
+    <span style="display: flex; align-items: center; gap: 8px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 20px; height: 20px; color: var(--text-cyan);"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      🚀 গิตহাব পুশ অটোমেশন (GitHub Push Automation)
+    </span>
   </h3>
-  <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 5px;">
-    এই সেকশন থেকে আপনার ব্যাকআপ সিস্টেমের প্রজেক্ট ফাইলগুলোকে (<code>Mizentia_Local_Backup</code>) সরাসরি গিটহাব রিপোজিটরিতে পুশ করতে পারবেন। রিপোজিটরি ইনিশিয়েলাইজেশন এবং রিমোট ইউআরএল কনফিগারেশন সরাসরি এখান থেকেই করা সম্ভব।
+  <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">
+    আপনার লোকাল ব্যাকআপ প্রজেক্ট ফাইলগুলোকে (<code>Mizentia_Local_Backup</code>) গิตহাব রিপোজিটরির নির্দিষ্ট ব্রাঞ্চে পুশ করুন।
   </p>
-  <div class="github-action-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
-    <!-- Setup view (when not initialized or no remote) -->
+
+  <div class="github-action-container" style="display: flex; flex-direction: column; gap: 15px;">
+    <!-- Account Selector and Info -->
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 15px; align-items: center; background: rgba(255,255,255,0.01); padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <label for="gitAccountSelector" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">গิตহাব অ্যাকাউন্ট সিলেক্ট করুন:</label>
+        <div style="display: flex; gap: 8px;">
+          <select id="gitAccountSelector" class="form-control" style="flex-grow: 1;">
+            <option value="">-- অ্যাকাউন্ট সিলেক্ট করুন --</option>
+          </select>
+          <button class="btn btn-primary" id="btnOpenAddAccountModal" style="padding: 0 12px; height: 36px; font-size: 0.8rem; white-space: nowrap; display: flex; align-items: center; gap: 4px; box-sizing: border-box;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            অ্যাড
+          </button>
+        </div>
+      </div>
+      
+      <!-- Active Account Profile Card -->
+      <div id="gitActiveAccountCard" style="display: none; align-items: center; gap: 10px; background: rgba(102,252,241,0.03); border: 1px solid rgba(102,252,241,0.12); padding: 6px 10px; border-radius: 6px; height: 36px; box-sizing: border-box; margin-top: 20px;">
+        <img id="gitAccountAvatar" src="" alt="Avatar" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--text-cyan);">
+        <span id="gitAccountUsername" style="font-weight: 600; font-size: 0.8rem; color: var(--text-cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px;">Username</span>
+        <button id="btnDeleteGitAccount" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px; display: flex; align-items: center; margin-left: auto;" title="অ্যাকাউন্ট মুছুন">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Repository & Branch selector row (hidden until account is loaded) -->
+    <div id="gitRepoConfigArea" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: rgba(255,255,255,0.01); padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color);">
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <label for="gitRepoSelector" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">রিপোজিটরি (Repository):</label>
+        <select id="gitRepoSelector" class="form-control" style="width: 100%;">
+          <option value="">-- রিপোজিটরি লোড হচ্ছে... --</option>
+        </select>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 5px;">
+        <label for="gitBranchSelector" style="font-size: 0.8rem; color: var(--text-muted); font-weight: 500;">ব্রাঞ্চ (Branch):</label>
+        <select id="gitBranchSelector" class="form-control" style="width: 100%;">
+          <option value="">-- ব্রাঞ্চ লোড হচ্ছে... --</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Actions Area -->
+    <div id="gitActionsArea" style="display: flex; gap: 12px; align-items: center;">
+      <input type="text" id="gitCommitMessage" placeholder="একটি ছোট কমিট মেসেজ লিখুন (যেমন: ফোল্ডার সিঙ্ক ফিক্স...)" class="form-control" style="flex-grow: 1; height: 36px; box-sizing: border-box;">
+      <button class="btn btn-secondary" id="btnGitStatus" style="white-space: nowrap; display: flex; align-items: center; gap: 6px; height: 36px; box-sizing: border-box;">
+        ⚡ স্ট্যাটাস চেক
+      </button>
+      <button class="btn btn-primary" id="btnGitPush" style="white-space: nowrap; display: flex; align-items: center; gap: 6px; height: 36px; box-sizing: border-box;" disabled>
+        🚀 গিট পুশ (Push)
+      </button>
+    </div>
+
+    <!-- Setup view (when not initialized) -->
     <div id="gitSetupArea" style="display: none; background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); gap: 12px; flex-direction: column;">
       <div id="gitInitWrapper" style="display: none; align-items: center; justify-content: space-between;">
         <div>
@@ -163,28 +218,6 @@
         </div>
         <button class="btn btn-secondary" id="btnGitInit">Initialize Repository</button>
       </div>
-
-      <div id="gitRemoteWrapper" style="display: none; flex-direction: column; gap: 8px;">
-        <div>
-          <strong style="color: var(--text-cyan);">গিটহাব রিমোট URL কনফিগার করুন</strong>
-          <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">গিটহাবে আপলোড করার জন্য আপনার রিপোজিটরির পুশ URL লিখুন।</div>
-        </div>
-        <div style="display: flex; gap: 10px;">
-          <input type="text" id="gitRemoteUrlInput" placeholder="E.g., https://github.com/username/repo.git" class="form-control" style="flex-grow: 1;">
-          <button class="btn btn-primary" id="btnGitSetRemote" style="white-space: nowrap;">সেট রিমোট (Set Remote)</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Main actions view -->
-    <div id="gitActionsArea" style="display: flex; gap: 12px; align-items: center;">
-      <input type="text" id="gitCommitMessage" placeholder="একটি ছোট কমিট মেসেজ লিখুন (যেমন: ফোল্ডার সিঙ্ক ফিক্স...)" class="form-control" style="flex-grow: 1;">
-      <button class="btn btn-secondary" id="btnGitStatus" style="white-space: nowrap; display: flex; align-items: center; gap: 6px;">
-        ⚡ স্ট্যাটাস চেক (Status)
-      </button>
-      <button class="btn btn-primary" id="btnGitPush" style="white-space: nowrap; display: flex; align-items: center; gap: 6px;">
-        🚀 গিট পুশ (Git Push)
-      </button>
     </div>
     
     <!-- Git Output Terminal Console -->

@@ -3,7 +3,8 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 const { execFile } = require('child_process');
-const { BACKUP_SYSTEM_DIR } = require('../lib/config');
+const https = require('https');
+const { BACKUP_SYSTEM_DIR, loadConfig, saveConfig } = require('../lib/config');
 
 function runGitCommand(args, cwd) {
   return new Promise((resolve) => {
@@ -22,6 +23,204 @@ function runGitCommand(args, cwd) {
     });
   });
 }
+
+function githubApiRequest(method, path, token, body = null) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.github.com',
+      port: 443,
+      path: path,
+      method: method,
+      headers: {
+        'User-Agent': 'Mizentia-Local-Backup-System',
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    };
+
+    if (body) {
+      options.headers['Content-Type'] = 'application/json';
+    }
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            resolve(JSON.parse(data));
+          } catch (e) {
+            resolve(data);
+          }
+        } else {
+          reject(new Error(`GitHub API returned status ${res.statusCode}: ${data}`));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    if (body) {
+      req.write(JSON.stringify(body));
+    }
+    req.end();
+  });
+}
+
+// Get saved accounts list
+router.get('/accounts', (req, res) => {
+  try {
+    const config = loadConfig();
+    const accounts = (config.githubAccounts || []).map(acc => ({
+      id: acc.id,
+      label: acc.label,
+      username: acc.username,
+      avatarUrl: acc.avatarUrl
+    }));
+    res.json({
+      success: true,
+      accounts,
+      selectedAccountId: config.selectedGithubAccountId || '',
+      selectedRepo: config.selectedGithubRepo || '',
+      selectedBranch: config.selectedGithubBranch || ''
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Add new account via PAT
+router.post('/accounts', async (req, res) => {
+  const { token, label } = req.body;
+  if (!token || !label) {
+    return res.status(400).json({ success: false, error: 'Token and label are required.' });
+  }
+
+  try {
+    const userProfile = await githubApiRequest('GET', '/user', token);
+    const config = loadConfig();
+    config.githubAccounts = config.githubAccounts || [];
+
+    const newAccount = {
+      id: 'github-acc-' + Date.now(),
+      label: label,
+      token: token,
+      username: userProfile.login,
+      avatarUrl: userProfile.avatar_url
+    };
+
+    config.githubAccounts.push(newAccount);
+    if (!config.selectedGithubAccountId) {
+      config.selectedGithubAccountId = newAccount.id;
+    }
+    saveConfig(config);
+
+    res.json({
+      success: true,
+      account: {
+        id: newAccount.id,
+        label: newAccount.label,
+        username: newAccount.username,
+        avatarUrl: newAccount.avatarUrl
+      }
+    });
+  } catch (e) {
+    console.error('Error adding GitHub account:', e);
+    res.status(400).json({ success: false, error: 'টোকেনটি অবৈধ বা গিটহাব এপিআই রিকোয়েস্ট ব্যর্থ হয়েছে।' });
+  }
+});
+
+// Delete a saved account
+router.delete('/accounts/:id', (req, res) => {
+  const { id } = req.params;
+  try {
+    const config = loadConfig();
+    config.githubAccounts = config.githubAccounts || [];
+    config.githubAccounts = config.githubAccounts.filter(acc => acc.id !== id);
+    
+    if (config.selectedGithubAccountId === id) {
+      config.selectedGithubAccountId = config.githubAccounts.length > 0 ? config.githubAccounts[0].id : '';
+      config.selectedGithubRepo = '';
+      config.selectedGithubBranch = '';
+    }
+    saveConfig(config);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Save selected settings config
+router.post('/config', (req, res) => {
+  const { accountId, repo, branch } = req.body;
+  try {
+    const config = loadConfig();
+    config.selectedGithubAccountId = accountId;
+    config.selectedGithubRepo = repo;
+    config.selectedGithubBranch = branch;
+    saveConfig(config);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// List repos for an account
+router.get('/repos', async (req, res) => {
+  const { accountId } = req.query;
+  if (!accountId) {
+    return res.status(400).json({ success: false, error: 'Account ID is required.' });
+  }
+
+  try {
+    const config = loadConfig();
+    const account = (config.githubAccounts || []).find(acc => acc.id === accountId);
+    if (!account) {
+      return res.status(404).json({ success: false, error: 'Account not found.' });
+    }
+
+    const repos = await githubApiRequest('GET', '/user/repos?per_page=100&type=owner', account.token);
+    const repoList = repos.map(repo => ({
+      name: repo.name,
+      fullName: repo.full_name,
+      cloneUrl: repo.clone_url,
+      defaultBranch: repo.default_branch
+    }));
+
+    res.json({ success: true, repos: repoList });
+  } catch (e) {
+    console.error('Error fetching repos:', e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// List branches for a repo
+router.get('/branches', async (req, res) => {
+  const { accountId, repoName } = req.query;
+  if (!accountId || !repoName) {
+    return res.status(400).json({ success: false, error: 'Account ID and repoName are required.' });
+  }
+
+  try {
+    const config = loadConfig();
+    const account = (config.githubAccounts || []).find(acc => acc.id === accountId);
+    if (!account) {
+      return res.status(404).json({ success: false, error: 'Account not found.' });
+    }
+
+    const branches = await githubApiRequest('GET', `/repos/${repoName}/branches?per_page=100`, account.token);
+    const branchList = branches.map(br => br.name);
+
+    res.json({ success: true, branches: branchList });
+  } catch (e) {
+    console.error('Error fetching branches:', e);
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
 
 // Git Status Check
 router.get('/status', async (req, res) => {
@@ -129,19 +328,44 @@ router.post('/remote', async (req, res) => {
   }
 });
 
-// Commit and Push to GitHub
+// Commit and Push to GitHub using Token Auth
 router.post('/push', async (req, res) => {
-  const { commitMessage } = req.body;
+  const { commitMessage, accountId, repoFullName, branchName } = req.body;
   const cwd = BACKUP_SYSTEM_DIR;
   const message = commitMessage || `Auto-update: ${new Date().toLocaleString()}`;
 
   try {
     const logs = [];
+    const config = loadConfig();
+    
+    let activeToken = null;
+    let repoUrl = null;
+
+    if (accountId && repoFullName) {
+      const account = (config.githubAccounts || []).find(acc => acc.id === accountId);
+      if (account) {
+        activeToken = account.token;
+        repoUrl = `https://${account.token}@github.com/${repoFullName}.git`;
+        logs.push(`Configuring push for repository: ${repoFullName} (Account: ${account.username})`);
+      }
+    }
+
+    let oldRemoteUrl = null;
+    if (repoUrl) {
+      const checkRemote = await runGitCommand(['remote', 'get-url', 'origin'], cwd);
+      if (checkRemote.success) {
+        oldRemoteUrl = checkRemote.stdout;
+        await runGitCommand(['remote', 'set-url', 'origin', repoUrl], cwd);
+      } else {
+        await runGitCommand(['remote', 'add', 'origin', repoUrl], cwd);
+      }
+    }
 
     logs.push('> git add .');
     const addRes = await runGitCommand(['add', '.'], cwd);
     if (!addRes.success) {
       logs.push(`Error staging files: ${addRes.stderr}`);
+      if (oldRemoteUrl) await runGitCommand(['remote', 'set-url', 'origin', oldRemoteUrl], cwd);
       return res.json({ success: false, logs });
     }
     logs.push('Staged all changes successfully.');
@@ -149,33 +373,55 @@ router.post('/push', async (req, res) => {
     logs.push(`> git commit -m "${message}"`);
     const commitRes = await runGitCommand(['commit', '-m', message], cwd);
     if (!commitRes.success) {
-      if (commitRes.stdout.includes('nothing to commit') || commitRes.stderr.includes('nothing to commit')) {
+      if (commitRes.stdout.includes('nothing to commit') || commitRes.stderr.includes('nothing to commit') || commitRes.stdout.includes('clean') || commitRes.stderr.includes('clean')) {
         logs.push('Nothing to commit, working tree clean.');
       } else {
         logs.push(`Error committing files: ${commitRes.stderr || commitRes.stdout}`);
+        if (oldRemoteUrl) await runGitCommand(['remote', 'set-url', 'origin', oldRemoteUrl], cwd);
         return res.json({ success: false, logs });
       }
     } else {
       logs.push(commitRes.stdout);
     }
 
-    const branchRes = await runGitCommand(['branch', '--show-current'], cwd);
-    const branchName = branchRes.stdout || 'main';
+    let targetBranch = branchName;
+    if (!targetBranch) {
+      const branchRes = await runGitCommand(['branch', '--show-current'], cwd);
+      targetBranch = branchRes.stdout || 'main';
+    }
 
-    logs.push(`> git push origin ${branchName}`);
-    const pushRes = await runGitCommand(['push', 'origin', branchName], cwd);
+    const currentBranchRes = await runGitCommand(['branch', '--show-current'], cwd);
+    const currentLocalBranch = currentBranchRes.stdout || 'main';
+
+    logs.push(`> git push origin ${currentLocalBranch}:${targetBranch}`);
+    const pushRes = await runGitCommand(['push', 'origin', `${currentLocalBranch}:${targetBranch}`], cwd);
     
     if (pushRes.stdout) logs.push(pushRes.stdout);
-    if (pushRes.stderr) logs.push(pushRes.stderr);
+    if (pushRes.stderr) {
+      let filteredStderr = pushRes.stderr;
+      if (activeToken) {
+        filteredStderr = filteredStderr.replace(new RegExp(activeToken, 'g'), '****');
+      }
+      logs.push(filteredStderr);
+    }
+
+    if (repoUrl && repoFullName) {
+      const cleanRemoteUrl = `https://github.com/${repoFullName}.git`;
+      await runGitCommand(['remote', 'set-url', 'origin', cleanRemoteUrl], cwd);
+    } else if (oldRemoteUrl) {
+      await runGitCommand(['remote', 'set-url', 'origin', oldRemoteUrl], cwd);
+    }
 
     if (!pushRes.success) {
       logs.push(`Push failed with exit code: ${pushRes.code}`);
       return res.json({ success: false, logs });
     }
 
-    logs.push('Push to GitHub completed successfully!');
+    logs.push(`Push to GitHub completed successfully! (Target: ${repoFullName || 'origin'} / ${targetBranch})`);
     res.json({ success: true, logs });
+
   } catch (e) {
+    console.error('Git push error:', e);
     res.status(500).json({ success: false, error: e.message });
   }
 });
