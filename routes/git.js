@@ -90,7 +90,8 @@ router.get('/accounts', (req, res) => {
       id: acc.id,
       label: acc.label,
       username: acc.username,
-      avatarUrl: acc.avatarUrl
+      avatarUrl: acc.avatarUrl,
+      token: acc.token
     }));
     res.json({
       success: true,
@@ -350,23 +351,26 @@ router.post('/push', async (req, res) => {
   const cwd = getTargetGitCwd();
   const message = commitMessage || `Auto-update: ${new Date().toLocaleString()}`;
 
+  let oldRemoteUrl = null;
+  let repoUrl = null;
+  let cleanRemoteUrl = null;
+
   try {
     const logs = [];
     const config = loadConfig();
     
     let activeToken = null;
-    let repoUrl = null;
 
     if (accountId && repoFullName) {
       const account = (config.githubAccounts || []).find(acc => acc.id === accountId);
       if (account) {
         activeToken = account.token;
         repoUrl = `https://${account.token}@github.com/${repoFullName}.git`;
+        cleanRemoteUrl = `https://github.com/${repoFullName}.git`;
         logs.push(`Configuring push for repository: ${repoFullName} (Account: ${account.username})`);
       }
     }
 
-    let oldRemoteUrl = null;
     if (repoUrl) {
       const checkRemote = await runGitCommand(['remote', 'get-url', 'origin'], cwd);
       if (checkRemote.success) {
@@ -444,11 +448,10 @@ router.post('/push', async (req, res) => {
       logs.push(filteredStderr);
     }
 
-    if (repoUrl && repoFullName) {
-      const cleanRemoteUrl = `https://github.com/${repoFullName}.git`;
-      await runGitCommand(['remote', 'set-url', 'origin', cleanRemoteUrl], cwd);
-    } else if (oldRemoteUrl) {
+    if (oldRemoteUrl) {
       await runGitCommand(['remote', 'set-url', 'origin', oldRemoteUrl], cwd);
+    } else if (cleanRemoteUrl) {
+      await runGitCommand(['remote', 'set-url', 'origin', cleanRemoteUrl], cwd);
     }
 
     if (!pushRes.success) {
@@ -461,6 +464,15 @@ router.post('/push', async (req, res) => {
 
   } catch (e) {
     console.error('Git push error:', e);
+    try {
+      if (oldRemoteUrl) {
+        await runGitCommand(['remote', 'set-url', 'origin', oldRemoteUrl], cwd);
+      } else if (cleanRemoteUrl) {
+        await runGitCommand(['remote', 'set-url', 'origin', cleanRemoteUrl], cwd);
+      }
+    } catch (cleanupErr) {
+      console.error('Cleanup remote URL failed:', cleanupErr);
+    }
     res.status(500).json({ success: false, error: e.message });
   }
 });

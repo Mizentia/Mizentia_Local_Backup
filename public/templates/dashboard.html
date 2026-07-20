@@ -173,9 +173,20 @@
       </div>
       
       <!-- Active Account Profile Card -->
-      <div id="gitActiveAccountCard" style="display: none; align-items: center; gap: 10px; background: rgba(102,252,241,0.03); border: 1px solid rgba(102,252,241,0.12); padding: 6px 10px; border-radius: 6px; height: 36px; box-sizing: border-box; margin-top: 20px;">
+      <div id="gitActiveAccountCard" style="display: none; align-items: center; gap: 8px; background: rgba(102,252,241,0.03); border: 1px solid rgba(102,252,241,0.12); padding: 6px 10px; border-radius: 6px; height: 36px; box-sizing: border-box; margin-top: 20px;">
         <img id="gitAccountAvatar" src="" alt="Avatar" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--text-cyan);">
-        <span id="gitAccountUsername" style="font-weight: 600; font-size: 0.8rem; color: var(--text-cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px;">Username</span>
+        <span id="gitAccountUsername" style="font-weight: 600; font-size: 0.8rem; color: var(--text-cyan); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px;">Username</span>
+        
+        <!-- Copy Token Button -->
+        <button id="btnCopyGitToken" style="background: none; border: none; color: var(--text-cyan); cursor: pointer; padding: 2px; display: flex; align-items: center; margin-left: 4px;" title="টোকেন কপি করুন">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 14px; height: 14px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        
+        <!-- Show Token Button -->
+        <button id="btnShowGitToken" style="background: none; border: none; color: var(--text-cyan); cursor: pointer; padding: 2px; display: flex; align-items: center;" title="টোকেন দেখুন">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+
         <button id="btnDeleteGitAccount" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 2px; display: flex; align-items: center; margin-left: auto;" title="অ্যাকাউন্ট মুছুন">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         </button>

@@ -40,6 +40,7 @@ BackupApp.utils.cacheElements = function() {
     'btnGitStatus', 'btnGitPush', 'gitTerminalBranch', 'gitConsoleLogs', 'gitConsoleWrapper',
     'githubAccountModal', 'gitAccountLabel', 'gitAccountToken', 'btnCancelGitAccountModal', 'btnConfirmGitAccount',
     'gitAccountSelector', 'btnOpenAddAccountModal', 'gitActiveAccountCard', 'gitAccountAvatar', 'gitAccountUsername', 'btnDeleteGitAccount',
+    'btnCopyGitToken', 'btnShowGitToken', 'viewGitTokenModal', 'viewGitTokenInput', 'btnModalCopyGitToken', 'btnCloseViewGitTokenModal',
     'gitRepoConfigArea', 'gitRepoSelector', 'gitBranchSelector',
     'gitLocalPathDropdown', 'gitLocalPathInput',
     'gitPushModeArea', 'btnEditGitIgnore', 'gitIgnoreTextareaWrapper', 'gitIgnoreTextarea', 'btnSaveGitIgnore', 'gitForcePush',
@@ -66,7 +67,7 @@ BackupApp.utils.loadTemplates = async function() {
   for (const tab of tabs) {
     const container = document.getElementById(`tab-${tab}`);
     if (container) {
-      const response = await fetch(`templates/${tab}.html`);
+      const response = await fetch(`templates/${tab}.html?v=1.0.5`);
       const html = await response.text();
       container.innerHTML = html;
     }

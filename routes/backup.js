@@ -59,6 +59,8 @@ router.post('/', async (req, res) => {
             // Update all nested files in state.files
             const oldPrefix = oldPath.endsWith('/') ? oldPath : oldPath + '/';
             const newPrefix = newPath.endsWith('/') ? newPath : newPath + '/';
+            const oldPathNormalized = oldPath.replace(/\//g, path.sep);
+            const newPathNormalized = newPath.replace(/\//g, path.sep);
             if (state.files) {
               for (const filePath in state.files) {
                 if (filePath.startsWith(oldPrefix)) {
@@ -67,8 +69,8 @@ router.post('/', async (req, res) => {
                     ...state.files[filePath]
                   };
                   if (config.connectionType === 'local_drive') {
-                    state.files[newFilePath].driveFileId = state.files[newFilePath].driveFileId.replace(oldPath, newPath);
-                    state.files[newFilePath].driveParentId = state.files[newFilePath].driveParentId.replace(oldPath, newPath);
+                    state.files[newFilePath].driveFileId = state.files[newFilePath].driveFileId.replace(oldPathNormalized, newPathNormalized);
+                    state.files[newFilePath].driveParentId = state.files[newFilePath].driveParentId.replace(oldPathNormalized, newPathNormalized);
                   }
                   delete state.files[filePath];
                 }
@@ -81,7 +83,7 @@ router.post('/', async (req, res) => {
                   const newFolderPath = newPrefix + folderPath.slice(oldPrefix.length);
                   state.folders[newFolderPath] = state.folders[folderPath];
                   if (config.connectionType === 'local_drive') {
-                    state.folders[newFolderPath] = state.folders[newFolderPath].replace(oldPath, newPath);
+                    state.folders[newFolderPath] = state.folders[newFolderPath].replace(oldPathNormalized, newPathNormalized);
                   }
                   delete state.folders[folderPath];
                 }

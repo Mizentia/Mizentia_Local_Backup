@@ -247,20 +247,44 @@
       </div>
     </div>
   </div>
+  
+  <!-- View GitHub Token Modal -->
+  <div class="modal-overlay" id="viewGitTokenModal" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; backdrop-filter: blur(4px);">
+    <div class="glass-card modal-card" style="max-width: 450px; width: 90%; text-align: left; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);">
+      <h3 style="margin-top: 0; color: var(--text-cyan); display: flex; align-items: center; gap: 8px; font-size: 1.25rem;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 24px; height: 24px;"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        গিটহাব পার্সোনাল অ্যাক্সেস টোকেন (PAT)
+      </h3>
+      <p style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 15px; line-height: 1.4; color: var(--text-muted);">
+        নিচে আপনার এই অ্যাকাউন্টের অ্যাক্সেস টোকেনটি দেওয়া হলো:
+      </p>
+      
+      <div style="position: relative; margin-bottom: 20px;">
+        <input type="text" id="viewGitTokenInput" class="form-control code-font" readonly style="width: 100%; padding-right: 40px; background: rgba(0,0,0,0.3); color: var(--text-light); height: 36px; box-sizing: border-box;">
+        <button id="btnModalCopyGitToken" style="position: absolute; right: 8px; top: 6px; background: none; border: none; color: var(--text-cyan); cursor: pointer; display: flex; align-items: center;" title="কপি করুন">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+        <button class="btn btn-primary" id="btnCloseViewGitTokenModal" style="padding: 8px 16px;">বন্ধ করুন</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Modular JS files -->
-  <script src="js/utils.js?v=1.0.4"></script>
-  <script src="js/tabs.js?v=1.0.4"></script>
-  <script src="js/dashboard.js?v=1.0.4"></script>
-  <script src="js/scannerTree.js?v=1.0.4"></script>
-  <script src="js/scanner.js?v=1.0.4"></script>
-  <script src="js/restore.js?v=1.0.4"></script>
-  <script src="js/ignore.js?v=1.0.4"></script>
-  <script src="js/settings.js?v=1.0.4"></script>
-  <script src="js/git.js?v=1.0.4"></script>
-  <script src="js/main.js?v=1.0.4"></script>
+  <script src="js/utils.js?v=1.0.5"></script>
+  <script src="js/tabs.js?v=1.0.5"></script>
+  <script src="js/dashboard.js?v=1.0.5"></script>
+  <script src="js/scannerTree.js?v=1.0.5"></script>
+  <script src="js/scanner.js?v=1.0.5"></script>
+  <script src="js/restore.js?v=1.0.5"></script>
+  <script src="js/ignore.js?v=1.0.5"></script>
+  <script src="js/settings.js?v=1.0.5"></script>
+  <script src="js/git.js?v=1.0.5"></script>
+  <script src="js/main.js?v=1.0.5"></script>
 </body>
 </html>

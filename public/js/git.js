@@ -617,4 +617,59 @@ BackupApp.git.init = function() {
   if (BackupApp.elements.btnGitStatus) {
     BackupApp.elements.btnGitStatus.addEventListener('click', BackupApp.git.checkStatus);
   }
+
+  // Wire up Copy GitHub Token button
+  if (BackupApp.elements.btnCopyGitToken) {
+    BackupApp.elements.btnCopyGitToken.addEventListener('click', () => {
+      const accountId = BackupApp.elements.gitAccountSelector?.value;
+      if (!accountId) return;
+      const account = BackupApp.state.githubAccounts?.find(acc => acc.id === accountId);
+      if (account && account.token) {
+        navigator.clipboard.writeText(account.token)
+          .then(() => BackupApp.utils.showToast('টোকেন ক্লিপবোর্ডে কপি করা হয়েছে!', 'success'))
+          .catch(err => BackupApp.utils.showToast('টোকেন কপি করতে ব্যর্থ হয়েছে।', 'error'));
+      }
+    });
+  }
+
+  // Wire up Show GitHub Token button
+  if (BackupApp.elements.btnShowGitToken) {
+    BackupApp.elements.btnShowGitToken.addEventListener('click', () => {
+      const accountId = BackupApp.elements.gitAccountSelector?.value;
+      if (!accountId) return;
+      const account = BackupApp.state.githubAccounts?.find(acc => acc.id === accountId);
+      if (account && account.token) {
+        if (BackupApp.elements.viewGitTokenInput) {
+          BackupApp.elements.viewGitTokenInput.value = account.token;
+        }
+        if (BackupApp.elements.viewGitTokenModal) {
+          BackupApp.elements.viewGitTokenModal.style.display = 'flex';
+        }
+      }
+    });
+  }
+
+  // Wire up Close View Token Modal button
+  if (BackupApp.elements.btnCloseViewGitTokenModal) {
+    BackupApp.elements.btnCloseViewGitTokenModal.addEventListener('click', () => {
+      if (BackupApp.elements.viewGitTokenModal) {
+        BackupApp.elements.viewGitTokenModal.style.display = 'none';
+      }
+      if (BackupApp.elements.viewGitTokenInput) {
+        BackupApp.elements.viewGitTokenInput.value = '';
+      }
+    });
+  }
+
+  // Wire up Copy Token inside Modal button
+  if (BackupApp.elements.btnModalCopyGitToken) {
+    BackupApp.elements.btnModalCopyGitToken.addEventListener('click', () => {
+      const token = BackupApp.elements.viewGitTokenInput?.value;
+      if (token) {
+        navigator.clipboard.writeText(token)
+          .then(() => BackupApp.utils.showToast('টোকেন ক্লিপবোর্ডে কপি করা হয়েছে!', 'success'))
+          .catch(err => BackupApp.utils.showToast('টোকেন কপি করতে ব্যর্থ হয়েছে।', 'error'));
+      }
+    });
+  }
 };
