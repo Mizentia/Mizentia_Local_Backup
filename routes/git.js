@@ -455,7 +455,11 @@ jobs:
     const addRes = await runGitCommand(['add', '.'], cwd);
     if (!addRes.success) {
       logs.push(`Error staging files: ${addRes.stderr}`);
-      if (oldRemoteUrl) await runGitCommand(['remote', 'set-url', 'origin', oldRemoteUrl], cwd);
+      if (oldRemoteUrl) {
+        await runGitCommand(['remote', 'set-url', 'origin', oldRemoteUrl], cwd);
+      } else if (cleanRemoteUrl) {
+        await runGitCommand(['remote', 'set-url', 'origin', cleanRemoteUrl], cwd);
+      }
       return res.json({ success: false, logs });
     }
     logs.push('Staged all changes successfully.');
@@ -467,7 +471,11 @@ jobs:
         logs.push('Nothing to commit, working tree clean.');
       } else {
         logs.push(`Error committing files: ${commitRes.stderr || commitRes.stdout}`);
-        if (oldRemoteUrl) await runGitCommand(['remote', 'set-url', 'origin', oldRemoteUrl], cwd);
+        if (oldRemoteUrl) {
+          await runGitCommand(['remote', 'set-url', 'origin', oldRemoteUrl], cwd);
+        } else if (cleanRemoteUrl) {
+          await runGitCommand(['remote', 'set-url', 'origin', cleanRemoteUrl], cwd);
+        }
         return res.json({ success: false, logs });
       }
     } else {
